@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { verify, type Verified } from '../core'
-import { creerDecodeur, estCarte, messageCamera } from './lecteurQr'
+import { estCarte } from './lecteurQr'
+import { ScannerQr } from './ScannerQr'
 import { REGISTRY, FACILITIES, useInfoRegistre } from './trust'
 import { UrgenceView } from './UrgenceView'
 
@@ -20,10 +21,7 @@ export function ScanUrgence({ initialText = '', beforeDisplay }: { initialText?:
   const [error, setError] = useState('')
   const [pasted, setPasted] = useState('')
   const [journalWarning, setJournalWarning] = useState('')
-  const videoRef = useRef<HTMLVideoElement>(null)
   const debutScan = useRef<number | null>(null)      // toucher sur « Scanner » : le chrono couvre caméra + lecture + vérification
-  const [lampe, setLampe] = useState<MediaStreamTrack | null>(null)
-  const [lampeOn, setLampeOn] = useState(false)
   const [depuisCamera, setDepuisCamera] = useState(false)
 
   const handleText = useCallback(async (text: string, debut?: number) => {
@@ -40,65 +38,6 @@ export function ScanUrgence({ initialText = '', beforeDisplay }: { initialText?:
 
   useEffect(() => { if (initialText) void handleText(initialText) }, [initialText, handleText])
 
-  useEffect(() => {
-    if (!camOn) return
-    let actif = true
-    let flux: MediaStream | null = null
-    let minuteur = 0
-    ;(async () => {
-      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-        setError('Caméra indisponible : le site doit être ouvert en HTTPS. Utilisez le texte collé en repli.'); setCamOn(false); return
-      }
-      try {
-        const decodeur = creerDecodeur()             // le moteur se charge pendant que la caméra s'ouvre
-        flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false })
-        if (!actif) return
-        const piste = flux.getVideoTracks()[0]
-        const cap = (piste.getCapabilities?.() ?? {}) as { focusMode?: string[]; torch?: boolean }
-        // Mise au point continue : sans elle, beaucoup de téléphones restent flous de près (cause n° 1 d'échec mesurée).
-        if (cap.focusMode?.includes('continuous')) await piste.applyConstraints({ advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet] }).catch(() => undefined)
-        setLampe(cap.torch ? piste : null)
-        const video = videoRef.current
-        if (!video) return
-        video.srcObject = flux
-        await video.play().catch(() => undefined)
-        const lire = await decodeur
-        const toile = document.createElement('canvas')
-        const ctx = toile.getContext('2d', { willReadFrequently: true })
-        if (!ctx) throw new Error('canvas indisponible')
-        const tour = async () => {
-          if (!actif) return
-          if (video.videoWidth) {
-            // Au plus 1600 px de côté : assez pour une carte dense tenue à distance, sans ralentir les téléphones modestes.
-            const k = Math.min(1, 1600 / Math.max(video.videoWidth, video.videoHeight))
-            toile.width = Math.round(video.videoWidth * k); toile.height = Math.round(video.videoHeight * k)
-            ctx.drawImage(video, 0, 0, toile.width, toile.height)
-            // Une image illisible ou une erreur ponctuelle du moteur ne doit JAMAIS arrêter la recherche.
-            const texte = await lire(ctx.getImageData(0, 0, toile.width, toile.height)).catch(() => null)
-            if (!actif) return
-            if (texte && estCarte(texte)) {
-              actif = false
-              flux?.getTracks().forEach(t => t.stop())
-              setCamOn(false)
-              void handleText(texte, debutScan.current ?? undefined)
-              return
-            }
-          }
-          minuteur = window.setTimeout(() => void tour(), 60)
-        }
-        void tour()
-      } catch (e) {
-        if (actif) { setError(messageCamera(e)); setCamOn(false) }
-      }
-    })()
-    return () => { actif = false; window.clearTimeout(minuteur); flux?.getTracks().forEach(t => t.stop()); setLampe(null); setLampeOn(false) }
-  }, [camOn, handleText])
-
-  const basculerLampe = async () => {
-    if (!lampe) return
-    try { await lampe.applyConstraints({ advanced: [{ torch: !lampeOn } as MediaTrackConstraintSet] }); setLampeOn(!lampeOn) } catch { setLampe(null) }
-  }
-
   return (
     <div className="space-y-4">
       {!result && <p className="text-sm text-[#F4F1EA]/55">La lecture et la vérification se font sur cet appareil, sans réseau.</p>}
@@ -109,15 +48,11 @@ export function ScanUrgence({ initialText = '', beforeDisplay }: { initialText?:
         {result && <button onClick={() => { setResult(null); setMs(null) }} className="rounded-full border border-white/20 px-5 py-2.5 text-sm text-[#F4F1EA]/80">Nouvelle lecture</button>}
       </div>
       {camOn && (
-        <div className="space-y-2">
-          <video ref={videoRef} playsInline muted autoPlay className="w-full max-w-sm rounded-2xl border border-white/10" />
-          <p className="text-sm text-[#F4F1EA]/60">Toute la carte dans l’image, à 15–25 cm, téléphone immobile.</p>
-          {lampe && (
-            <button onClick={() => void basculerLampe()} className="rounded-full border border-white/20 px-4 py-1.5 text-sm text-[#F4F1EA]/80">
-              {lampeOn ? 'Éteindre la lampe' : 'Allumer la lampe'}
-            </button>
-          )}
-        </div>
+        <ScannerQr
+          accepte={estCarte}
+          onLu={texte => { setCamOn(false); void handleText(texte, debutScan.current ?? undefined) }}
+          onErreur={message => { setError(message); setCamOn(false) }}
+        />
       )}
       {error && <p role="alert" className="text-sm text-[#F2A93B]">{error}</p>}
 

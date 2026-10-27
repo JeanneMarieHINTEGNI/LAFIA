@@ -92,6 +92,7 @@ export default function EspacePatient({ tab }: { tab: string }) {
   const [editPhoto, setEditPhoto] = useState(false)
   const [error, setError] = useState('')
   const [restaure, setRestaure] = useState<Restauration | null>(null)
+  const [mode, setMode] = useState<'choix' | 'creer' | 'retrouver'>('choix')
   const current = TABS.find(t => t.id === tab) ?? TABS[0]
   const ready = hasCompleteProfile(profile)
 
@@ -136,68 +137,99 @@ export default function EspacePatient({ tab }: { tab: string }) {
   }
 
   if (!ready) {
+    const carteChoix = 'rounded-2xl border border-white/10 bg-black/15 p-5 text-left'
     return (
       <div className="min-h-screen bg-[#0A1615] px-5 py-24 text-[#F4F1EA] sm:px-10">
         <div className="mx-auto max-w-2xl rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm">
           <p className="text-xs uppercase tracking-[0.18em] text-[#F4F1EA]/45">Espace patient</p>
-          <h1 className="mt-4 font-display text-4xl font-light">Créer votre espace</h1>
-          <p className="mt-3 text-sm leading-relaxed text-[#F4F1EA]/60">
-            Ces informations restent sur ce téléphone. Elles servent à vous reconnaître dans votre espace ; elles ne sont pas mises dans le QR.
-          </p>
+          <h1 className="mt-4 font-display text-4xl font-light">Votre espace</h1>
 
-          <div className="mt-8">
-            <ChoixPhoto photo={draftPhoto} nom={`${draft.firstName} ${draft.lastName}`} onChange={setDraftPhoto} />
-          </div>
-
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <label className="text-sm text-[#F4F1EA]/65">
-              Prénom
-              <input autoComplete="given-name" value={draft.firstName} onChange={e => setDraft({ ...draft, firstName: e.target.value })} className={champ} placeholder="Prénom" />
-            </label>
-            <label className="text-sm text-[#F4F1EA]/65">
-              Nom
-              <input autoComplete="family-name" value={draft.lastName} onChange={e => setDraft({ ...draft, lastName: e.target.value })} className={champ} placeholder="Nom" />
-            </label>
-            <label className="text-sm text-[#F4F1EA]/65">
-              Année de naissance
-              <input inputMode="numeric" maxLength={4} value={draft.birthYear} onChange={e => setDraft({ ...draft, birthYear: e.target.value })} className={champ} placeholder="1992" />
-            </label>
-          </div>
-
-          {restaure ? (
-            <div role="status" className="mt-6 rounded-xl border border-[#4FB3AC]/40 bg-[#4FB3AC]/10 p-4 text-sm text-[#C8F3EE]">
-              <p>Espace retrouvé : identifiant Lafia <span className="font-mono whitespace-nowrap">{restaure.id}</span>.</p>
-              <p className="mt-1 text-[#F4F1EA]/65">
-                {restaure.avecCarte ? 'Votre carte signée est revenue sur ce téléphone. ' : ''}
-                {restaure.avecJournal ? 'Votre journal du serveur est de nouveau accessible. ' : 'Le journal du serveur reste lié à l’ancien téléphone (pas de code de secours). '}
-                Complétez votre nom puis créez votre espace.
+          {mode === 'choix' && (
+            <>
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                <div className={carteChoix}>
+                  <p className="text-[17px] text-[#F4F1EA]">Créer votre espace</p>
+                  <p className="mt-1 text-sm text-[#F4F1EA]/60">Première fois sur ce téléphone.</p>
+                  <button type="button" onClick={() => setMode('creer')} className="mt-4 rounded-full bg-[#F2A93B] px-5 py-2.5 text-sm font-medium text-[#0A1615] hover:bg-[#f5b85a]">Créer mon espace</button>
+                </div>
+                <div className={carteChoix}>
+                  <p className="text-[17px] text-[#F4F1EA]">Retrouver votre espace</p>
+                  <p className="mt-1 text-sm text-[#F4F1EA]/60">Vous aviez déjà un espace sur un autre téléphone. Il vous faut votre code de secours.</p>
+                  <button type="button" onClick={() => setMode('retrouver')} className="mt-4 rounded-full border border-white/15 px-5 py-2.5 text-sm text-[#F4F1EA]/85 hover:border-[#4FB3AC]">Retrouver mon espace</button>
+                </div>
+              </div>
+              <p className="mt-6 text-xs leading-relaxed text-[#F4F1EA]/45">
+                Scanner une carte ne donne jamais accès à l’espace d’un patient : seulement à ses informations d’urgence,
+                et cette lecture est inscrite dans son journal.
               </p>
-            </div>
-          ) : (
-            <div className="mt-6 rounded-xl border border-white/10 bg-black/15 p-4 text-sm text-[#F4F1EA]/60">
-              <p className="text-[#F4F1EA]/85">Votre identifiant Lafia sera créé automatiquement.</p>
-              <p className="mt-1">C’est un numéro aléatoire qui ne révèle rien sur vous. Nous ne demandons ni votre NPI ni votre numéro de carte d’identité.</p>
+            </>
+          )}
+
+          {mode === 'retrouver' && (
+            <div className="mt-8">
+              <RestaurerEspace
+                onAnnuler={() => setMode('choix')}
+                onRestaure={r => {
+                  setRestaure(r)
+                  setDraft(d => ({ ...d, healthId: r.id, birthYear: d.birthYear || r.anneeNaissance || '' }))
+                  setMode('creer')
+                }}
+              />
             </div>
           )}
 
-          {!restaure && (
-            <div className="mt-4">
-              <RestaurerEspace onRestaure={r => {
-                setRestaure(r)
-                setDraft(d => ({ ...d, healthId: r.id, birthYear: d.birthYear || r.anneeNaissance || '' }))
-              }} />
-            </div>
+          {mode === 'creer' && (
+            <>
+              {restaure ? (
+                <div role="status" className="mt-8 rounded-xl border border-[#4FB3AC]/40 bg-[#4FB3AC]/10 p-4 text-sm text-[#C8F3EE]">
+                  <p>Espace retrouvé : identifiant Lafia <span className="font-mono whitespace-nowrap">{restaure.id}</span>.</p>
+                  <p className="mt-1 text-[#F4F1EA]/65">
+                    {restaure.avecCarte ? 'Votre carte signée et votre profil d’urgence sont revenus sur ce téléphone. ' : ''}
+                    Votre historique de lectures est de nouveau accessible. Indiquez votre prénom et votre nom (ils restent sur ce téléphone), puis validez.
+                  </p>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setMode('choix')} className="mt-6 text-sm text-[#F4F1EA]/55 hover:text-[#F4F1EA]">← Retour</button>
+              )}
+
+              <p className="mt-8 text-[15px] text-[#F4F1EA]/85">{restaure ? 'Dernière étape : votre nom' : 'Créer votre espace sur ce téléphone'}</p>
+              <p className="mt-1 text-sm leading-relaxed text-[#F4F1EA]/60">
+                Ces informations restent sur ce téléphone. Elles servent à vous reconnaître dans votre espace ; elles ne sont pas mises dans le QR.
+              </p>
+
+              <div className="mt-6">
+                <ChoixPhoto photo={draftPhoto} nom={`${draft.firstName} ${draft.lastName}`} onChange={setDraftPhoto} />
+              </div>
+
+              <div className="mt-8 grid gap-4 sm:grid-cols-2">
+                <label className="text-sm text-[#F4F1EA]/65">
+                  Prénom
+                  <input autoComplete="given-name" value={draft.firstName} onChange={e => setDraft({ ...draft, firstName: e.target.value })} className={champ} placeholder="Prénom" />
+                </label>
+                <label className="text-sm text-[#F4F1EA]/65">
+                  Nom
+                  <input autoComplete="family-name" value={draft.lastName} onChange={e => setDraft({ ...draft, lastName: e.target.value })} className={champ} placeholder="Nom" />
+                </label>
+                <label className="text-sm text-[#F4F1EA]/65">
+                  Année de naissance
+                  <input inputMode="numeric" maxLength={4} value={draft.birthYear} onChange={e => setDraft({ ...draft, birthYear: e.target.value })} className={champ} placeholder="1992" />
+                </label>
+              </div>
+
+              {!restaure && (
+                <div className="mt-6 rounded-xl border border-white/10 bg-black/15 p-4 text-sm text-[#F4F1EA]/60">
+                  <p className="text-[#F4F1EA]/85">Votre identifiant Lafia sera créé automatiquement.</p>
+                  <p className="mt-1">C’est un numéro aléatoire qui ne révèle rien sur vous. Nous ne demandons ni votre NPI ni votre numéro de carte d’identité.</p>
+                </div>
+              )}
+
+              {error && <p role="alert" className="mt-4 rounded-lg border border-[#D9534A]/40 bg-[#D9534A]/10 px-3 py-2 text-sm text-[#FFB5AC]">{error}</p>}
+
+              <button type="button" onClick={saveProfile} className="mt-8 rounded-full bg-[#F2A93B] px-5 py-2.5 text-sm font-medium text-[#0A1615] hover:bg-[#f5b85a]">
+                {restaure ? 'Ouvrir mon espace' : 'Créer mon espace'}
+              </button>
+            </>
           )}
-
-          {error && <p role="alert" className="mt-4 rounded-lg border border-[#D9534A]/40 bg-[#D9534A]/10 px-3 py-2 text-sm text-[#FFB5AC]">{error}</p>}
-
-          <button
-            type="button"
-            onClick={saveProfile}
-            className="mt-8 rounded-full bg-[#F2A93B] px-5 py-2.5 text-sm font-medium text-[#0A1615] hover:bg-[#f5b85a]"
-          >
-            Créer mon espace
-          </button>
         </div>
       </div>
     )

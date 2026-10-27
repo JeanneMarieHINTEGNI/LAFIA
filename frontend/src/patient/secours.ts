@@ -4,10 +4,13 @@ import { PROFIL_VIDE, type Liste, type ProfilSaisi } from './carte'
 /**
  * Changer de téléphone sans perdre son espace.
  *
- * Le CODE DE SECOURS = identifiant Lafia + secret du patient + contrôle (4 caractères, détecte une faute de frappe).
- * Il ne contient AUCUNE donnée médicale : il redonne seulement l'accès au journal des lectures (qui a lu la carte).
- * La CARTE signée, elle, se récupère depuis sa version imprimée ou son lien : elle contient déjà tout ce qu'il faut,
- * et sa signature prouve qu'elle n'a pas été modifiée.
+ * RÈGLE DE SÉCURITÉ : la carte ouvre l'URGENCE, jamais le COMPTE. Elle est lisible par quiconque la tient (c'est voulu) ;
+ * elle ne prouve donc pas qu'on est le patient. Retrouver un espace exige le CODE DE SECOURS, confirmé par le serveur.
+ * La carte ne s'importe qu'ensuite, et seulement si elle porte le même identifiant.
+ *
+ * Le code de secours = identifiant Lafia + secret du patient + contrôle (4 caractères). Le contrôle détecte une faute
+ * de frappe ; il n'est PAS secret (n'importe qui peut le calculer) : seul le serveur peut dire si le secret est le bon.
+ * Le code ne contient aucune donnée médicale.
  */
 
 export const PREFIXE_SECOURS = 'LAFIA-SECOURS:'
@@ -17,6 +20,9 @@ async function controle(id: string, jeton: string): Promise<string> {
   const h = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(`${id}:${jeton}`)))
   return Array.from(h.slice(0, 2), b => b.toString(16).padStart(2, '0')).join('')
 }
+
+/** Le QR scanné est-il un code de secours Lafia ? */
+export const estCodeSecours = (texte: string) => texte.replace(/\s+/g, '').startsWith(PREFIXE_SECOURS)
 
 export async function codeSecours(id: string, jeton: string): Promise<string> {
   return `${PREFIXE_SECOURS}${id}:${jeton}:${await controle(id, jeton)}`
@@ -46,13 +52,16 @@ export function carteEnTexte(saisie: string): string {
 
 export type CarteRestauree = { ok: true; carte: string; payload: C0Payload } | { ok: false; erreur: string }
 
-/** Vérifie la carte comme le ferait un lecteur d'urgence, et qu'elle appartient bien à cet identifiant. */
-export function restaurerCarte(saisie: string, registre: Registry, idAttendu?: string, now?: number): CarteRestauree {
+/**
+ * Vérifie la carte comme le ferait un lecteur d'urgence, et qu'elle appartient à l'identifiant DÉJÀ PROUVÉ par le code
+ * de secours. `idAttendu` est obligatoire : une carte seule ne doit jamais suffire à prendre une identité.
+ */
+export function restaurerCarte(saisie: string, registre: Registry, idAttendu: string, now?: number): CarteRestauree {
   let carte: string
   try { carte = carteEnTexte(saisie) } catch { return { ok: false, erreur: 'Carte illisible.' } }
   const v = verify(carte, registre, now)
   if (!v.ok) return { ok: false, erreur: `Carte refusée : ${v.reason}` }
-  if (idAttendu && v.payload.id !== idAttendu) return { ok: false, erreur: 'Cette carte appartient à un autre identifiant Lafia que le code de secours.' }
+  if (v.payload.id !== idAttendu) return { ok: false, erreur: 'Cette carte appartient à un autre espace que ce code de secours.' }
   return { ok: true, carte, payload: v.payload }
 }
 

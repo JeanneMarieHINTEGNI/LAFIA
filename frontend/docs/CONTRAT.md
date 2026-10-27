@@ -55,7 +55,9 @@ Le serveur revérifie chaque entrée à la réception ; vecteurs partagés : `de
 ## Code de secours (changement de téléphone)
 `LAFIA-SECOURS:<id>:<jeton>:<contrôle>` ; contrôle = 4 premiers caractères hexadécimaux de `SHA256("<id>:<jeton>")`.
 Ne contient aucune donnée médicale : il redonne l'accès au journal du serveur (vérifié par `GET /api/journal/patients/<id>`).
-La carte se restaure depuis son texte `L2:` ou son lien `#L2B:`, vérifiée comme par un lecteur et rattachée au même identifiant.
+RÈGLE : la carte ouvre l'URGENCE, jamais le COMPTE (elle est lisible par quiconque la tient). Retrouver un espace exige le code
+de secours CONFIRMÉ PAR LE SERVEUR (le contrôle de 4 caractères n'est pas secret : hors ligne, un code ne prouve rien).
+La carte ne s'importe qu'ensuite, vérifiée comme par un lecteur et seulement si elle porte le même identifiant.
 
 ## Démo uniquement
 Graines des badges dérivées d'un nom (`make_demo.py`) : INTERDIT en production.
