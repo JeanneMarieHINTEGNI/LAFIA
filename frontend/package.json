@@ -26,6 +26,7 @@
     "zxing-wasm": "2.2.4"
   },
   "devDependencies": {
+    "@testing-library/dom": "10.4.2",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^26.6.5",
     "@types/react": "^18.3.12",
