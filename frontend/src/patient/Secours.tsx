@@ -146,7 +146,7 @@ export function RestaurerEspace({ onRestaure, onAnnuler }: { onRestaure: (r: Res
           <p className="mt-2 text-[#F4F1EA]/60">Vérification auprès du serveur…</p>
         ) : scan === 'code' ? (
           <div className="mt-2">
-            <ScannerQr accepte={estCodeSecours} consigne="Le QR de votre fiche de secours dans l’image."
+            <ScannerQr accepte={estCodeSecours} consigne="Le QR de votre fiche de secours dans l’image." refus="Ceci n’est pas un code de secours. Une carte d’urgence ne permet pas de retrouver un espace ; pour la lire, utilisez « Lire une carte d’urgence »"
               onLu={t => { setScan(null); void prendreCode(t) }} onErreur={m => { setScan(null); setErreur(m) }} />
             <button type="button" onClick={() => setScan(null)} className={`mt-2 ${bouton}`}>Arrêter la caméra</button>
           </div>

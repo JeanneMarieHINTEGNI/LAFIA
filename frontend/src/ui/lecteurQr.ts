@@ -52,13 +52,18 @@ export async function decodeurNatif(): Promise<Decodeur | null> {
   } catch { return null }
 }
 
-/** Natif d'abord (rapide), zxing-wasm ensuite pour l'image que le natif n'a pas lue. Lève si aucun moteur ne démarre. */
-export async function creerDecodeur(): Promise<Decodeur> {
+/** Natif d'abord (rapide), zxing-wasm ensuite pour l'image que le natif n'a pas lue. Lève si aucun moteur ne démarre.
+ *  `moteur` dit lequel tourne : affiché en petit sous la caméra, pour diagnostiquer un téléphone qui ne lit pas. */
+export async function creerDecodeurInfo(): Promise<{ lire: Decodeur; moteur: string }> {
   const [natif, wasm] = await Promise.all([decodeurNatif(), decodeurWasm().catch(() => null)])
-  if (natif && wasm) return async image => (await natif(image)) ?? wasm(image)
-  const seul = natif ?? wasm
-  if (!seul) throw new Error('aucun lecteur de QR disponible')
-  return seul
+  if (natif && wasm) return { lire: async image => (await natif(image)) ?? wasm(image), moteur: 'détecteur du téléphone + zxing-wasm' }
+  if (wasm) return { lire: wasm, moteur: 'zxing-wasm' }
+  if (natif) return { lire: natif, moteur: 'détecteur du téléphone' }
+  throw new Error('aucun lecteur de QR disponible')
+}
+
+export async function creerDecodeur(): Promise<Decodeur> {
+  return (await creerDecodeurInfo()).lire
 }
 
 /** Message lisible pour un échec de démarrage de la caméra. */

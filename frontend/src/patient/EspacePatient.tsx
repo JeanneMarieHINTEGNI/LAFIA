@@ -158,6 +158,11 @@ export default function EspacePatient({ tab }: { tab: string }) {
                   <button type="button" onClick={() => setMode('retrouver')} className="mt-4 rounded-full border border-white/15 px-5 py-2.5 text-sm text-[#F4F1EA]/85 hover:border-[#4FB3AC]">Retrouver mon espace</button>
                 </div>
               </div>
+              <div className="mt-6 rounded-2xl border border-[#D9534A]/30 bg-[#D9534A]/10 p-4">
+                <p className="text-sm text-[#F4F1EA]">Vous voulez lire la carte d’urgence de quelqu’un ?</p>
+                <p className="mt-1 text-xs text-[#F4F1EA]/60">Pas besoin d’espace : le lecteur s’ouvre directement.</p>
+                <a href="/#/lire" className="mt-3 inline-block rounded-full bg-[#F4F1EA] px-4 py-2 text-sm font-medium text-[#0A1615]">Lire une carte d’urgence</a>
+              </div>
               <p className="mt-6 text-xs leading-relaxed text-[#F4F1EA]/45">
                 Scanner une carte ne donne jamais accès à l’espace d’un patient : seulement à ses informations d’urgence,
                 et cette lecture est inscrite dans son journal.

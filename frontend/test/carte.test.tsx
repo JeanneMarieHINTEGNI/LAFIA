@@ -91,6 +91,13 @@ describe('Routeur', () => {
     await screen.findByText(/Signature valide/)
     expect(screen.getByText(/Pénicilline/)).toBeTruthy()
   })
+  it('#/lire ouvre le lecteur d’urgence sans espace patient (soignant, passant)', () => {
+    localStorage.clear()
+    window.location.hash = '/lire'
+    render(<BadgeProvider><App /></BadgeProvider>)
+    expect(screen.getByText('Qui lit cette carte ?')).toBeTruthy()
+    expect(screen.queryByText('Votre espace')).toBeNull()
+  })
   it('un ancien lien #L1: est refusé sans afficher de données', () => {
     window.location.hash = 'L1:z.abc'
     render(<BadgeProvider><App /></BadgeProvider>)

@@ -54,6 +54,15 @@ function AccountButton() {
   )
 }
 
+/** Accès direct au lecteur d'urgence, sans espace patient. */
+function ReaderButton() {
+  return (
+    <a href="/#/lire" className="lg lg-button flex items-center gap-2 text-[#F4F1EA]/85 text-sm font-medium px-4 py-1.5 hover:text-white">
+      Lire une carte
+    </a>
+  )
+}
+
 function StartButton() {
   return (
     <a href="#final" className="bg-[#F2A93B] text-[#0A1615] text-sm font-medium px-5 py-2 rounded-full hover:bg-[#f5b85a] transition-colors">
@@ -111,6 +120,8 @@ export default function App() {
   // Contrat : tout fragment « #L2… » va au lecteur, qui reçoit le fragment ENTIER (unpack sait lire « #L2:… » et « #L2B:… »).
   if (hash.startsWith('#L2')) return <LecteurPage><ScanJournalise initialText={hash} /></LecteurPage>
   if (hash.startsWith('#L1:')) return <LecteurPage><AncienneCarte /></LecteurPage>
+  // Lecteur public : un soignant ou un passant lit une carte SANS créer d'espace patient (QR texte « L2: » compris).
+  if (hash.startsWith('#/lire')) return <LecteurPage><ScanJournalise /></LecteurPage>
   if (hash.startsWith('#/espace')) return <EspacePatient tab={hash.split('/')[2] ?? ''} />
   return <Landing />
 }
@@ -164,6 +175,7 @@ function Landing() {
         </div>
 
         <div className="hidden md:flex items-center gap-2">
+          <ReaderButton />
           <AccountButton />
           <StartButton />
         </div>
@@ -205,6 +217,7 @@ function Landing() {
           </a>
         ))}
         <div className="flex items-center gap-2 pt-6 transition-all duration-300" style={{ transitionDelay: menuOpen ? '300ms' : '0ms' }}>
+          <ReaderButton />
           <AccountButton />
           <StartButton />
         </div>
