@@ -1,10 +1,11 @@
 # Lafia — backend
 
-Deux services, Python (3.13 ou 3.14), FastAPI, PyNaCl, SQLite (un simple fichier) :
+Python (3.13 ou 3.14), FastAPI, PyNaCl, SQLite (un simple fichier). Deux services et une bibliothèque :
 - le **journal partagé** : les lectures de carte faites sur le téléphone d'un soignant remontent ici, et le patient
   les retrouve sur son propre téléphone ;
 - le **registre des badges signé** : la liste des soignants autorisés et des badges révoqués, signée par l'autorité,
-  que les téléphones récupèrent dès qu'ils ont du réseau.
+  que les téléphones récupèrent dès qu'ils ont du réseau ;
+- la **carte en Python** (`lafia/c0.py`) : lire, vérifier et signer une carte exactement comme le navigateur.
 
 ## Démarrer en local
 
@@ -62,6 +63,20 @@ déploiement du site : c'est le registre de secours d'un téléphone qui n'a enc
 **Effet d'une révocation** : TOUTES les cartes signées par ce badge sont refusées, y compris celles signées avant le vol.
 Les patients concernés doivent faire re-signer leur carte. (Accepter les cartes « signées avant la révocation » serait
 fragile : la date d'une carte est écrite par le signataire lui-même, donc un voleur pourrait l'antidater.)
+
+## La carte en Python (`lafia/c0.py`)
+
+Miroir exact du noyau du navigateur (`frontend/src/core/`) : Base45, CBOR (`lafia/cbor.py`, sans dépendance), zlib,
+schéma, cycle brouillon → relu → signé, vérification avec les mêmes codes d'erreur et les mêmes messages.
+Les tests le prouvent dans les deux sens : `tests/vecteurs_carte.json` (cartes du navigateur, vérifiées ici) et
+`tests/vecteurs_carte_python.json` (cartes d'ici, vérifiées par le navigateur).
+
+```bash
+.venv/bin/python -m lafia.c0 verifier "L2:…"        # vérifie une carte hors ligne et affiche son contenu
+```
+
+Le serveur n'expose volontairement **aucune** route qui recevrait une carte : elle contient des données médicales
+en clair. Ce module sert aux tests, aux outils de l'autorité et au contrôle qualité, sur un poste local.
 
 ## Ce que le serveur voit, et ce qu'il ne voit pas
 

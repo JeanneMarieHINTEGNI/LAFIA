@@ -30,6 +30,8 @@ RX_KID = re.compile(r"^[0-9a-f]{16}$")
 RX_HASH = re.compile(r"^[0-9a-f]{64}$")
 RX_SIG = re.compile(r"^[0-9a-f]{128}$")
 ACTIONS = ("LECTURE", "ECRITURE")
+# Motifs d'une lecture SANS badge (catalogue fermé, identique à MOTIFS_LECTURE dans frontend/src/journal/index.ts).
+MOTIFS_LECTURE = ("INCONSCIENT", "NE_PARLE_PAS", "VITAL", "AUTRE")
 
 Statut = Literal["signee", "sans_badge", "badge_inconnu"]
 
@@ -54,11 +56,12 @@ class Entree:
     etab: str | None = None
     acteur: str | None = None
     sig: str | None = None
+    motif: str | None = None
 
     @staticmethod
     def depuis_dict(d: Mapping) -> "Entree":
         """Valide la FORME (types, motifs). Les champs inconnus sont refusés : rien d'imprévu n'entre en base."""
-        permis = {"i", "t", "action", "cible", "rubriques", "etab", "acteur", "prev", "hash", "sig"}
+        permis = {"i", "t", "action", "cible", "rubriques", "etab", "acteur", "motif", "prev", "hash", "sig"}
         inconnus = set(d) - permis
         if inconnus:
             raise EntreeInvalide("FORME", f"champs inconnus : {', '.join(sorted(inconnus))}")
@@ -73,7 +76,7 @@ class Entree:
             v = d.get(nom)
             if v is None and optionnel:
                 return None
-            if not isinstance(v, str) or not rx.match(v):
+            if not isinstance(v, str) or not rx.fullmatch(v):
                 raise EntreeInvalide("FORME", f"{nom} : format invalide")
             return v
 
@@ -81,8 +84,11 @@ class Entree:
         if action not in ACTIONS:
             raise EntreeInvalide("FORME", "action : LECTURE ou ECRITURE attendu")
         rub = d.get("rubriques")
-        if not isinstance(rub, list) or not 1 <= len(rub) <= 4 or not all(isinstance(r, str) and RX_RUBRIQUE.match(r) for r in rub):
+        if not isinstance(rub, list) or not 1 <= len(rub) <= 4 or not all(isinstance(r, str) and RX_RUBRIQUE.fullmatch(r) for r in rub):
             raise EntreeInvalide("FORME", "rubriques : 1 à 4 codes attendus")
+        motif = d.get("motif")
+        if motif is not None and motif not in MOTIFS_LECTURE:
+            raise EntreeInvalide("FORME", "motif : hors catalogue")
         return Entree(
             i=entier("i", 0, 10_000_000),
             t=entier("t", 1_600_000_000, 4_000_000_000),
@@ -94,6 +100,7 @@ class Entree:
             prev=texte("prev", RX_HASH),  # type: ignore[arg-type]
             hash=texte("hash", RX_HASH),  # type: ignore[arg-type]
             sig=texte("sig", RX_SIG, optionnel=True),
+            motif=motif,
         )
 
     def vers_dict(self) -> dict:
@@ -102,6 +109,8 @@ class Entree:
             d["etab"] = self.etab
         if self.acteur:
             d["acteur"] = self.acteur
+        if self.motif:
+            d["motif"] = self.motif
         d.update(prev=self.prev, hash=self.hash)
         if self.sig:
             d["sig"] = self.sig
@@ -109,11 +118,10 @@ class Entree:
 
 
 def contenu(e: Entree) -> str:
-    """Sérialisation canonique, identique à `JSON.stringify([...])` côté navigateur (champs ASCII validés)."""
-    return json.dumps(
-        [e.i, e.t, e.action, e.cible, list(e.rubriques), e.etab, e.acteur, e.prev],
-        separators=(",", ":"), ensure_ascii=False,
-    )
+    """Sérialisation canonique, identique à `JSON.stringify([...])` côté navigateur (champs ASCII validés).
+    Le motif n'est ajouté en fin de tableau que s'il existe : les entrées antérieures gardent leur empreinte."""
+    base = [e.i, e.t, e.action, e.cible, list(e.rubriques), e.etab, e.acteur, e.prev]
+    return json.dumps(base + [e.motif] if e.motif else base, separators=(",", ":"), ensure_ascii=False)
 
 
 def calculer_hash(e: Entree) -> str:

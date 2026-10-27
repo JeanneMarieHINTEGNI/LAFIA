@@ -9,13 +9,14 @@ import { Avatar, ChoixPhoto, CLE_PHOTO } from './Avatar'
 import { nouvelIdPatient } from './carte'
 import { enregistrerPatient } from '../journal/sync'
 import { ScanJournalise } from '../ui/ScanJournalise'
+import { RestaurerEspace, SauvegardeSecours, type Restauration } from './Secours'
 
 const TABS = [
   { id: 'journal', short: 'Journal', label: 'Mon journal', icon: ClockCounterClockwiseIcon, title: 'Qui a ouvert votre dossier.', sub: 'Chaque lecture de votre carte : quand, où, par qui. Vérifié sur cet appareil.', View: JournalView },
   { id: 'carte', short: 'Carte', label: 'Ma carte', icon: QrCodeIcon, title: 'Votre carte.', sub: "Ce qu'un soignant lit en urgence, sans réseau.", View: CarteView },
   { id: 'lecture', short: 'Urgence', label: 'Lecture d’urgence', icon: QrCodeIcon, title: 'Lecture d’urgence.', sub: 'Ouvrir un lien QR ou coller le contenu d’une carte signée.', View: ScanJournalise },
-  { id: 'compartiments', short: 'Compartiments', label: 'Mes compartiments', icon: FoldersIcon, title: 'Ce que vous montrez.', sub: 'Vous décidez de ce qui est lisible en urgence et de ce qui reste protégé.', View: CompartimentsView },
-  { id: 'aidant', short: 'Rappels', label: 'Aidant et rappels', icon: HandHeartIcon, title: 'Votre aidant et vos rappels.', sub: 'La personne à prévenir, et les rappels qui gardent le traitement à jour.', View: AidantView },
+  { id: 'compartiments', short: 'Compartiments', label: 'Mes compartiments', icon: FoldersIcon, title: 'Ce que vous montrez.', sub: 'Ce que votre carte montre en urgence, et ce qui viendra ensuite.', View: CompartimentsView },
+  { id: 'aidant', short: 'Aidant', label: 'Aidant et rappels', icon: HandHeartIcon, title: 'Votre aidant et vos rappels.', sub: 'La personne qu’un soignant peut appeler en urgence. Les rappels arrivent bientôt.', View: AidantView },
 ] as const
 
 // Where each piece of the record actually lives: answers "what does this space manage if nothing is on the server?".
@@ -26,15 +27,15 @@ function WhereData() {
       <dl className="space-y-3 text-[#F4F1EA]/45">
         <div>
           <dt className="text-[#F4F1EA]/80">Ce téléphone</dt>
-          <dd>Vos compartiments 0 et 1, déchiffrés ici seulement, et votre journal.</dd>
+          <dd>Votre profil, votre photo, votre carte et une copie de votre journal.</dd>
         </div>
         <div>
           <dt className="text-[#F4F1EA]/80">Votre carte</dt>
-          <dd>Le compartiment 0, signé.</dd>
+          <dd>Vos informations d’urgence, signées par un soignant. Elles se lisent sans réseau.</dd>
         </div>
         <div>
           <dt className="text-[#F4F1EA]/80">Le serveur</dt>
-          <dd>Votre dossier et votre journal, chiffrés. Il ne détient aucune clé.</dd>
+          <dd>Le journal des lectures de votre carte. Jamais vos informations d’urgence. Plus tard : votre dossier complet.</dd>
         </div>
       </dl>
     </div>
@@ -90,6 +91,7 @@ export default function EspacePatient({ tab }: { tab: string }) {
   const [draftPhoto, setDraftPhoto] = useState(photo)
   const [editPhoto, setEditPhoto] = useState(false)
   const [error, setError] = useState('')
+  const [restaure, setRestaure] = useState<Restauration | null>(null)
   const current = TABS.find(t => t.id === tab) ?? TABS[0]
   const ready = hasCompleteProfile(profile)
 
@@ -162,10 +164,30 @@ export default function EspacePatient({ tab }: { tab: string }) {
             </label>
           </div>
 
-          <div className="mt-6 rounded-xl border border-white/10 bg-black/15 p-4 text-sm text-[#F4F1EA]/60">
-            <p className="text-[#F4F1EA]/85">Votre identifiant Lafia sera créé automatiquement.</p>
-            <p className="mt-1">C’est un numéro aléatoire qui ne révèle rien sur vous. Nous ne demandons ni votre NPI ni votre numéro de carte d’identité.</p>
-          </div>
+          {restaure ? (
+            <div role="status" className="mt-6 rounded-xl border border-[#4FB3AC]/40 bg-[#4FB3AC]/10 p-4 text-sm text-[#C8F3EE]">
+              <p>Espace retrouvé : identifiant Lafia <span className="font-mono whitespace-nowrap">{restaure.id}</span>.</p>
+              <p className="mt-1 text-[#F4F1EA]/65">
+                {restaure.avecCarte ? 'Votre carte signée est revenue sur ce téléphone. ' : ''}
+                {restaure.avecJournal ? 'Votre journal du serveur est de nouveau accessible. ' : 'Le journal du serveur reste lié à l’ancien téléphone (pas de code de secours). '}
+                Complétez votre nom puis créez votre espace.
+              </p>
+            </div>
+          ) : (
+            <div className="mt-6 rounded-xl border border-white/10 bg-black/15 p-4 text-sm text-[#F4F1EA]/60">
+              <p className="text-[#F4F1EA]/85">Votre identifiant Lafia sera créé automatiquement.</p>
+              <p className="mt-1">C’est un numéro aléatoire qui ne révèle rien sur vous. Nous ne demandons ni votre NPI ni votre numéro de carte d’identité.</p>
+            </div>
+          )}
+
+          {!restaure && (
+            <div className="mt-4">
+              <RestaurerEspace onRestaure={r => {
+                setRestaure(r)
+                setDraft(d => ({ ...d, healthId: r.id, birthYear: d.birthYear || r.anneeNaissance || '' }))
+              }} />
+            </div>
+          )}
 
           {error && <p role="alert" className="mt-4 rounded-lg border border-[#D9534A]/40 bg-[#D9534A]/10 px-3 py-2 text-sm text-[#FFB5AC]">{error}</p>}
 
@@ -219,6 +241,9 @@ export default function EspacePatient({ tab }: { tab: string }) {
             <div className="mt-10">
               <WhereData />
             </div>
+            <div className="mt-10 border-t border-white/10 pt-8">
+              <SauvegardeSecours id={profile.healthId} />
+            </div>
           </div>
         </aside>
 
@@ -236,6 +261,9 @@ export default function EspacePatient({ tab }: { tab: string }) {
           <current.View />
           <div className="md:hidden mt-16 border-t border-white/10 pt-8">
             <WhereData />
+          </div>
+          <div className="md:hidden mt-10 border-t border-white/10 pt-8">
+            <SauvegardeSecours id={profile.healthId} />
           </div>
         </main>
       </div>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { DecodeHintType as HintType } from '@zxing/library'
 import { verify, type Verified } from '../core'
+import { creerDecodeur, estCarte, messageCamera } from './lecteurQr'
 import { REGISTRY, FACILITIES, useInfoRegistre } from './trust'
 import { UrgenceView } from './UrgenceView'
 
@@ -21,9 +21,14 @@ export function ScanUrgence({ initialText = '', beforeDisplay }: { initialText?:
   const [pasted, setPasted] = useState('')
   const [journalWarning, setJournalWarning] = useState('')
   const videoRef = useRef<HTMLVideoElement>(null)
+  const debutScan = useRef<number | null>(null)      // toucher sur « Scanner » : le chrono couvre caméra + lecture + vérification
+  const [lampe, setLampe] = useState<MediaStreamTrack | null>(null)
+  const [lampeOn, setLampeOn] = useState(false)
+  const [depuisCamera, setDepuisCamera] = useState(false)
 
-  const handleText = useCallback(async (text: string) => {
-    const t0 = performance.now()
+  const handleText = useCallback(async (text: string, debut?: number) => {
+    const t0 = debut ?? performance.now()
+    setDepuisCamera(debut !== undefined)
     const v = verify(text, REGISTRY)
     setJournalWarning('')
     if (v.ok && beforeDisplay) {
@@ -37,43 +42,83 @@ export function ScanUrgence({ initialText = '', beforeDisplay }: { initialText?:
 
   useEffect(() => {
     if (!camOn) return
-    let active = true
-    let stop: (() => void) | undefined
+    let actif = true
+    let flux: MediaStream | null = null
+    let minuteur = 0
     ;(async () => {
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        setError('Caméra indisponible : le site doit être ouvert en HTTPS. Utilisez le texte collé en repli.'); setCamOn(false); return
+      }
       try {
-        const [{ BrowserQRCodeReader }, { DecodeHintType }] = await Promise.all([import('@zxing/browser'), import('@zxing/library')])
-        if (!active || !videoRef.current) return
-        const hints = new Map<HintType, unknown>([[DecodeHintType.TRY_HARDER, true]])
-        const reader = new BrowserQRCodeReader(hints, { delayBetweenScanAttempts: 120 })
-        const controls = await reader.decodeFromConstraints(
-          { video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } },
-          videoRef.current,
-          (res, _err, ctl) => {
-            if (!active || !res) return
-            const text = res.getText()
-            if (!/L2B?:/.test(text)) return                 // QR étranger : on continue de chercher
-            void handleText(text); setCamOn(false); ctl.stop()
-          },
-        )
-        stop = () => controls.stop()
-        if (!active) controls.stop()
-      } catch {
-        if (active) { setError("Caméra indisponible : il faut HTTPS (ou localhost) et l'autorisation d'accès. Utilisez le texte collé en repli."); setCamOn(false) }
+        const decodeur = creerDecodeur()             // le moteur se charge pendant que la caméra s'ouvre
+        flux = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false })
+        if (!actif) return
+        const piste = flux.getVideoTracks()[0]
+        const cap = (piste.getCapabilities?.() ?? {}) as { focusMode?: string[]; torch?: boolean }
+        // Mise au point continue : sans elle, beaucoup de téléphones restent flous de près (cause n° 1 d'échec mesurée).
+        if (cap.focusMode?.includes('continuous')) await piste.applyConstraints({ advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet] }).catch(() => undefined)
+        setLampe(cap.torch ? piste : null)
+        const video = videoRef.current
+        if (!video) return
+        video.srcObject = flux
+        await video.play().catch(() => undefined)
+        const lire = await decodeur
+        const toile = document.createElement('canvas')
+        const ctx = toile.getContext('2d', { willReadFrequently: true })
+        if (!ctx) throw new Error('canvas indisponible')
+        const tour = async () => {
+          if (!actif) return
+          if (video.videoWidth) {
+            // Au plus 1600 px de côté : assez pour une carte dense tenue à distance, sans ralentir les téléphones modestes.
+            const k = Math.min(1, 1600 / Math.max(video.videoWidth, video.videoHeight))
+            toile.width = Math.round(video.videoWidth * k); toile.height = Math.round(video.videoHeight * k)
+            ctx.drawImage(video, 0, 0, toile.width, toile.height)
+            // Une image illisible ou une erreur ponctuelle du moteur ne doit JAMAIS arrêter la recherche.
+            const texte = await lire(ctx.getImageData(0, 0, toile.width, toile.height)).catch(() => null)
+            if (!actif) return
+            if (texte && estCarte(texte)) {
+              actif = false
+              flux?.getTracks().forEach(t => t.stop())
+              setCamOn(false)
+              void handleText(texte, debutScan.current ?? undefined)
+              return
+            }
+          }
+          minuteur = window.setTimeout(() => void tour(), 60)
+        }
+        void tour()
+      } catch (e) {
+        if (actif) { setError(messageCamera(e)); setCamOn(false) }
       }
     })()
-    return () => { active = false; stop?.() }
+    return () => { actif = false; window.clearTimeout(minuteur); flux?.getTracks().forEach(t => t.stop()); setLampe(null); setLampeOn(false) }
   }, [camOn, handleText])
+
+  const basculerLampe = async () => {
+    if (!lampe) return
+    try { await lampe.applyConstraints({ advanced: [{ torch: !lampeOn } as MediaTrackConstraintSet] }); setLampeOn(!lampeOn) } catch { setLampe(null) }
+  }
 
   return (
     <div className="space-y-4">
       {!result && <p className="text-sm text-[#F4F1EA]/55">La lecture et la vérification se font sur cet appareil, sans réseau.</p>}
       <div className="flex flex-wrap gap-2">
-        <button onClick={() => { setError(''); setResult(null); setCamOn(c => !c) }} className="bg-[#F4F1EA] text-[#0A1615] rounded-full px-5 py-2.5 text-sm font-medium">
+        <button onClick={() => { setError(''); setResult(null); setMs(null); debutScan.current = performance.now(); setCamOn(c => !c) }} className="bg-[#F4F1EA] text-[#0A1615] rounded-full px-5 py-2.5 text-sm font-medium">
           {camOn ? 'Arrêter la caméra' : 'Scanner la carte'}
         </button>
         {result && <button onClick={() => { setResult(null); setMs(null) }} className="rounded-full border border-white/20 px-5 py-2.5 text-sm text-[#F4F1EA]/80">Nouvelle lecture</button>}
       </div>
-      {camOn && <video ref={videoRef} playsInline muted autoPlay className="w-full max-w-sm rounded-2xl border border-white/10" />}
+      {camOn && (
+        <div className="space-y-2">
+          <video ref={videoRef} playsInline muted autoPlay className="w-full max-w-sm rounded-2xl border border-white/10" />
+          <p className="text-sm text-[#F4F1EA]/60">Toute la carte dans l’image, à 15–25 cm, téléphone immobile.</p>
+          {lampe && (
+            <button onClick={() => void basculerLampe()} className="rounded-full border border-white/20 px-4 py-1.5 text-sm text-[#F4F1EA]/80">
+              {lampeOn ? 'Éteindre la lampe' : 'Allumer la lampe'}
+            </button>
+          )}
+        </div>
+      )}
       {error && <p role="alert" className="text-sm text-[#F2A93B]">{error}</p>}
 
       <details className="text-sm text-[#F4F1EA]/60">
@@ -90,7 +135,11 @@ export function ScanUrgence({ initialText = '', beforeDisplay }: { initialText?:
       )}
       {journalWarning && <p role="alert" className="rounded-xl border border-[#F2A93B]/40 bg-[#F2A93B]/10 px-4 py-3 text-sm text-[#F2A93B]">⚠ {journalWarning}</p>}
       {result?.ok && <UrgenceView card={result} facilities={FACILITIES} />}
-      {ms !== null && result?.ok && <p className="text-xs text-[#F4F1EA]/40">Vérifié en {ms} ms (cible : lecture complète &lt; 5 s)</p>}
+      {ms !== null && result?.ok && (
+        <p className="text-xs text-[#F4F1EA]/40">
+          {depuisCamera ? `Lu et vérifié en ${(ms / 1000).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} s depuis le toucher sur « Scanner »` : `Vérifié en ${ms} ms`} (cible : lecture complète &lt; 5 s)
+        </p>
+      )}
       {result && <p className="text-xs text-[#F4F1EA]/40">Registre des soignants : version {registre.version} du {new Date(registre.emis * 1000).toLocaleDateString('fr-FR')}</p>}
     </div>
   )

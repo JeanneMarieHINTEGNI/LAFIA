@@ -3,6 +3,7 @@ import { journal, useJournal } from '../journal/usejournal'
 import { verifierChaine, verifierEntreeSeule, type Entree, type StatutEntree, type Verdict } from '../journal'
 import { journalDuServeur } from '../journal/sync'
 import { FACILITIES, REGISTRY, getRoleLabel } from '../ui/trust'
+import { MOTIF_LECTURE } from '../ui/labels'
 import { useDeviceState } from './store'
 
 // « Mon journal » : les VRAIS accès à la carte du patient, vérifiés avant affichage.
@@ -24,7 +25,7 @@ function quand(t: number) {
 /** Qui a lu : le rôle vient du registre et n'est affiché comme vérifié que si l'entrée est signée par un badge connu. */
 function lecteur(e: Entree, statut?: StatutEntree): { qui: string; statut: string; ok: boolean } {
   if (statut === 'invalide') return { qui: 'Entrée falsifiée', statut: 'Empreinte ou signature invalide : à ignorer', ok: false }
-  if (!e.acteur) return { qui: 'Lecteur sans badge', statut: 'Non vérifié : aucune signature', ok: false }
+  if (!e.acteur) return { qui: 'Lecteur sans badge', statut: e.motif ? `Non vérifié · motif : ${MOTIF_LECTURE[e.motif] ?? e.motif}` : 'Non vérifié : aucune signature', ok: false }
   const r = REGISTRY[e.acteur]
   if (!r || r.revoked) return { qui: 'Badge inconnu ou révoqué', statut: 'Signature non vérifiable', ok: false }
   return { qui: r.label ?? getRoleLabel(r.role), statut: 'Signé par son badge', ok: true }

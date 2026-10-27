@@ -1,7 +1,11 @@
-# CONTRAT TECHNIQUE LAFIA v2 (référence actuelle : `src/core/schema.ts` et `src/core/signing.ts` ; le miroir Python `lafia/c0.py` de la carte reste à écrire dans le backend)
+# CONTRAT TECHNIQUE LAFIA v2 (référence : `src/core/schema.ts` et `src/core/signing.ts` ; miroir Python : `backend/lafia/c0.py`)
 
 Toute modification se fait dans les DEUX langages ; `pytest` et `bun run test` échouent si ils divergent
-(vecteurs partagés `demo/vectors.json`, catalogue exporté, vérification croisée dans les deux sens).
+(vecteurs partagés dans les deux sens : `demo/vecteurs_carte.json` produits par le navigateur et vérifiés par le Python,
+`demo/vecteurs_carte_python.json` produits par le Python et vérifiés par le navigateur ; copies dans `backend/tests/`).
+
+Détail d'implémentation à respecter des deux côtés : la décompression zlib vérifie l'en-tête mais IGNORE la somme Adler-32
+(comportement de `unzlibSync` de fflate). Une carte modifiée donne donc « BAD_SIGNATURE » des deux côtés ; l'intégrité repose sur Ed25519.
 
 ## Format
 - Payload CBOR : `{v:2, id:"p-<hex>", iat:<epoch s>, pr:{al,tx,ah,ec,gs,yb,sx,vs}, co:[≤3 consultations]}`.
@@ -37,8 +41,21 @@ XChaCha20-Poly1305, padding 1/4/16 Ko (non construit).
 Journal (implémenté, `src/journal/index.ts` ; miroir Python `backend/lafia/journal.py`) :
 `hash = SHA256( JSON.stringify([i, t, action, cible, rubriques, etab|null, acteur|null, prev]) )` en hexadécimal, `prev` = hash
 précédent (64 zéros pour i = 0), `sig = Ed25519(octets du hash)` par le badge `acteur` s'il y en a un. Une chaîne par appareil lecteur.
+Lecture SANS badge : champ `motif` (catalogue fermé `INCONSCIENT | NE_PARLE_PAS | VITAL | AUTRE`, écran « Qui lit ? »), ajouté EN FIN
+de la liste hachée : `[i, t, action, cible, rubriques, etab|null, acteur|null, prev, motif]`. Sans motif, la liste est inchangée
+(les anciennes entrées gardent leur empreinte). Un motif hors catalogue est ignoré par le navigateur et refusé par le serveur.
 Le serveur revérifie chaque entrée à la réception ; vecteurs partagés : `demo/vecteurs_journal.json` (copie dans `backend/tests/`).
 (L'ancienne cible « CBOR([idx,ts,acteur,action,cible]) » n'a jamais été implémentée ; c'est le format ci-dessus qui fait foi.)
+
+## Données d'urgence et serveur (décision de l'équipe, 27/10/2026)
+- Les informations d'urgence (C0) vivent dans la carte et se lisent SANS serveur. Aucune route du serveur ne reçoit ni ne stocke une carte.
+- Le reste du dossier médical (historique complet, comptes rendus, examens) PEUT être stocké sur un serveur, comme les bases des hôpitaux (phase P3).
+  Où, chiffré ou non, et qui lit quoi : décision D8, à trancher avant de construire.
+
+## Code de secours (changement de téléphone)
+`LAFIA-SECOURS:<id>:<jeton>:<contrôle>` ; contrôle = 4 premiers caractères hexadécimaux de `SHA256("<id>:<jeton>")`.
+Ne contient aucune donnée médicale : il redonne l'accès au journal du serveur (vérifié par `GET /api/journal/patients/<id>`).
+La carte se restaure depuis son texte `L2:` ou son lien `#L2B:`, vérifiée comme par un lecteur et rattachée au même identifiant.
 
 ## Démo uniquement
 Graines des badges dérivées d'un nom (`make_demo.py`) : INTERDIT en production.

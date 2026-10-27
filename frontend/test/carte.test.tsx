@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { verify } from '../src/core'
 import {
@@ -82,9 +82,12 @@ describe('Carte signée de bout en bout', () => {
 describe('Routeur', () => {
   const carte = signerCarte(construireCarte('p-0123456789abcdef', { al: ['PEN'] }, [], Math.floor(Date.now() / 1000)), medecin)
 
-  it('un lien #L2B: ouvert depuis l’appareil photo affiche la carte vérifiée', async () => {
+  it('un lien #L2B: ouvert depuis l’appareil photo demande « Qui lit ? » puis affiche la carte vérifiée', async () => {
     window.location.hash = texteQr(carte, 'https://lafia.example/').qr.split('#')[1]
     render(<BadgeProvider><App /></BadgeProvider>)
+    expect(screen.getByText('Qui lit cette carte ?')).toBeTruthy()
+    expect(screen.queryByText(/Pénicilline/)).toBeNull()          // rien d'affiché avant le choix
+    fireEvent.click(screen.getByRole('button', { name: 'Urgence vitale' }))
     await screen.findByText(/Signature valide/)
     expect(screen.getByText(/Pénicilline/)).toBeTruthy()
   })

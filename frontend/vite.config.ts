@@ -28,7 +28,9 @@ export default defineConfig(({ mode }) => {
 				},
 				workbox: {
 					navigateFallback: '/index.html',
-					globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+					// wasm : moteur du lecteur de QR (zxing-wasm), indispensable pour scanner en mode avion.
+					globPatterns: ['**/*.{js,css,html,svg,png,woff2,wasm}'],
+					maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
 				},
 			}),
 		],

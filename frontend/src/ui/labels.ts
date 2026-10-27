@@ -42,3 +42,7 @@ export const MOTIFS: Record<string, string> = { FIEV: 'Fièvre', CONS: 'Consulta
 export const ORIENT: Record<string, string> = { DOM: 'Retour à domicile', SUIV: 'Suivi programmé', EVAC: 'Évacuation' }
 export const ROLE_LABEL: Record<string, string> = { relais: 'Relais communautaire', infirmier: 'Infirmier(ère)', medecin: 'Médecin' }
 export const label = (m: Record<string, string>, c: string) => m[c] ?? c
+/** Motifs d'une lecture d'urgence SANS badge (codes : MOTIFS_LECTURE dans src/journal/index.ts). */
+export const MOTIF_LECTURE: Record<string, string> = {
+  INCONSCIENT: 'Patient inconscient', NE_PARLE_PAS: 'Ne peut pas s’exprimer', VITAL: 'Urgence vitale', AUTRE: 'Autre urgence',
+}

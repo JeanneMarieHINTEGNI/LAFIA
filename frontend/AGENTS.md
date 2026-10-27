@@ -16,7 +16,9 @@ Ce dépôt est le **frontend** (`lafia-frontend`). La landing marketing cohabite
 frontend/
   AGENTS.md                   # ce fichier
   demo/                       # NON servi, NON importé par src/
-    vectors.json              # vecteurs de démo (incomplets vs contrat Python)
+    vecteurs_carte.json       # cartes produites par le navigateur, vérifiées par le Python (backend/tests/)
+    vecteurs_carte_python.json# cartes produites par le Python, vérifiées par le navigateur
+    vecteurs_journal.json     # entrées de journal produites par le navigateur, vérifiées par le Python
     secrets/                  # graines de badges de DÉMO (medecin/infirmier/relais .json)
     make_demo.mjs             # régénère secrets/, demo/registry.json (source NON signée) et facilities.json
     registry.json             # source à signer avec « python -m lafia.registre signer » (backend)
@@ -49,13 +51,15 @@ frontend/
     carte.test.tsx            # espace patient → C0, lien QR, routeur #L2B: / #L1:
     journalview.test.tsx  store.test.tsx  sync.test.tsx
     vecteurs-journal.test.ts  # produit demo/vecteurs_journal.json, vérifié aussi par le backend Python
+    vecteurs-carte.test.ts    # produit demo/vecteurs_carte.json ; vérifie demo/vecteurs_carte_python.json
+    registre.test.ts          # registre signé, révocation, anti-retour en arrière
     setup.ts                  # tests « hors ligne » par défaut (fetch simulé)
   docs/
     CONTRAT.md                # contrat technique v2 (référence)
     MODELE-MENACE.md
 ```
 
-Présents depuis : `src/journal/` (`ajouterEntree`, `verifierChaine`, `useJournal`), cycle brouillon → relu → signé dans `src/core/signing.ts`. Vérification croisée TS ↔ Python : faite pour le journal (`demo/vecteurs_journal.json`) ; pas encore pour la carte (`demo/vectors.json` et `demo/qr_reference.txt` restent des marques de place).
+Présents depuis : `src/journal/` (`ajouterEntree`, `verifierChaine`, `useJournal`), cycle brouillon → relu → signé dans `src/core/signing.ts`. Vérification croisée TS ↔ Python : faite pour la carte (dans les deux sens) et pour le journal. Miroir Python de la carte : `backend/lafia/c0.py` (+ `cbor.py`, sans dépendance).
 
 ## 3. Contrat de la carte v2 (QR résumé « C0 ») — cible
 
@@ -109,12 +113,14 @@ Backend (`backend/`, Python/FastAPI/SQLite) : journal partagé fait et testé (v
 
 Registre signé (fait) : `src/ui/trust.ts` vérifie la signature de l'autorité, n'accepte qu'une version plus récente, garde la dernière pour le hors-ligne ; `sync.ts` la récupère sur `/api/registre`. Révocation = toutes les cartes de ce badge refusées.
 
-À faire : miroir Python de la carte (`lafia/c0.py`) ; coffres C1/C2 chiffrés (libsodium) ; chiffrement du journal ; récupération du compte patient ; bouton « + » ; décisions §6.
+Fait aussi : écran « Qui lit ? » (motif de lecture sans badge, journalisé) ; changement de téléphone (code de secours + carte restaurée, `src/patient/secours.ts`, `Secours.tsx`).
+
+À faire : dossier complet sur serveur (phase P3, après décision D8 : les données d'urgence restent dans la carte, sans serveur) ; coffres C1/C2 ; chiffrement du journal ; bouton « + » ; décisions §6.
 
 ## 8. Limites à afficher honnêtement
 
 - Le C0 est lisible par toute personne qui tient la carte ; les catégories sensibles n’y sont que sur choix de la personne.
-- Le journal local n’est ni chiffré ni synchronisé.
+- Le journal local n’est pas chiffré ; il est synchronisé avec le serveur en arrière-plan (métadonnées : qui, quand, où).
 - Une erreur de saisie d’un soignant authentique n’est pas détectée par le schéma : c’est le rôle de l’étape de relecture.
 - Aucune validation clinique n’a eu lieu.
 - Les graines `demo/secrets/` sont **interdites en production**.

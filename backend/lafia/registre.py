@@ -46,7 +46,7 @@ def valider_badges(badges: Mapping) -> dict:
     if not isinstance(badges, dict) or not badges:
         raise RegistreInvalide("badges : objet non vide attendu")
     for kid, b in badges.items():
-        if not RX_KID.match(kid) or not isinstance(b, dict) or not RX_PUB.match(str(b.get("pub", ""))):
+        if not RX_KID.fullmatch(kid) or not isinstance(b, dict) or not RX_PUB.fullmatch(str(b.get("pub", ""))):
             raise RegistreInvalide(f"badge {kid!r} : identifiant ou clé publique invalide")
         if kid_de(b["pub"]) != kid:
             raise RegistreInvalide(f"badge {kid} : l'identifiant doit être le début de la clé publique")
@@ -95,7 +95,7 @@ def lire_cle(chemin: str | Path) -> SigningKey:
 
 def lire_pub(chemin: str | Path) -> str:
     pub = json.loads(Path(chemin).read_text(encoding="utf-8"))["pub"]
-    if not RX_PUB.match(pub):
+    if not RX_PUB.fullmatch(pub):
         raise RegistreInvalide("clé publique d'autorité invalide")
     return pub
 

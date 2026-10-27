@@ -22,7 +22,23 @@ def verifier_tout(brutes, registre=REG):
 
 
 def test_vecteurs_du_navigateur_acceptes_avec_le_bon_statut():
-    assert verifier_tout(BRUTES) == ["signee", "sans_badge", "signee", "signee"]
+    assert verifier_tout(BRUTES) == ["signee", "sans_badge", "signee", "signee", "sans_badge"]
+
+
+def test_motif_compte_dans_l_empreinte_et_reste_retrocompatible():
+    assert BRUTES[4]["motif"] == "INCONSCIENT"
+    assert all("motif" not in b for b in BRUTES[:4])          # anciennes entrées : format inchangé
+    b = copy.deepcopy(BRUTES)
+    b[4]["motif"] = "VITAL"                                     # changer le motif casse l'empreinte
+    with pytest.raises(EntreeInvalide) as e:
+        verifier_tout(b)
+    assert e.value.code == "HASH"
+
+
+def test_motif_hors_catalogue_refuse():
+    with pytest.raises(EntreeInvalide) as e:
+        Entree.depuis_dict({**BRUTES[4], "motif": "CURIOSITE"})
+    assert e.value.code == "FORME"
 
 
 def test_hash_python_identique_au_hash_typescript():
@@ -85,3 +101,10 @@ def test_forme_refusee(patch):
     with pytest.raises(EntreeInvalide) as e:
         Entree.depuis_dict({**BRUTES[0], **patch})
     assert e.value.code == "FORME"
+
+
+@pytest.mark.parametrize("champ", ["cible", "prev", "hash", "acteur"])
+def test_saut_de_ligne_final_refuse(champ):
+    """« $ » de Python accepte un saut de ligne final : les formats sont vérifiés en entier (fullmatch)."""
+    with pytest.raises(EntreeInvalide):
+        Entree.depuis_dict({**BRUTES[0], champ: BRUTES[0][champ] + "\n"})

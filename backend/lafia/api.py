@@ -127,7 +127,7 @@ def creer_app(db: str | None = None, registre: str | None = None, autorite: str 
 
     @app.get("/api/journal/patients/{pid}")
     def lire(pid: str, authorization: str | None = Header(default=None)):
-        if not RX_PATIENT.match(pid):
+        if not RX_PATIENT.fullmatch(pid):
             raise HTTPException(422, "identifiant patient invalide")
         jeton = (authorization or "").removeprefix("Bearer ").strip()
         # Même réponse si l'identifiant n'existe pas ou si le jeton est faux : on ne révèle pas quels patients existent.

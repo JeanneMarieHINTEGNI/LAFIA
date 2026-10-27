@@ -21,12 +21,16 @@ export type Entree = {
   rubriques: string[]       // ex. ['C0']
   etab?: string             // établissement (clé de facilities.json), si connu
   acteur?: string           // kid du badge, si l'acteur en a un
+  motif?: string            // pourquoi on lit sans badge (catalogue MOTIFS_LECTURE) ; absent si lecture avec badge
   prev: string              // hash de l'entrée précédente ('0'×64 pour la première)
   hash: string              // SHA-256 hex du contenu ci-dessus
   sig?: string              // signature Ed25519 hex du hash, par `acteur`
 }
 
-export type Saisie = { action: Action; cible: string; rubriques: string[]; etab?: string; signataire?: Badge | null }
+export type Saisie = { action: Action; cible: string; rubriques: string[]; etab?: string; signataire?: Badge | null; motif?: string }
+
+/** Motifs d'une lecture SANS badge (catalogue fermé, identique côté Python : backend/lafia/journal.py). */
+export const MOTIFS_LECTURE = ['INCONSCIENT', 'NE_PARLE_PAS', 'VITAL', 'AUTRE'] as const
 
 export interface Stockage { lire(): Promise<Entree[]>; ecrire(e: Entree[]): Promise<void> }
 
@@ -39,8 +43,10 @@ async function sha256(s: string): Promise<string> {
 }
 
 // Sérialisation canonique : ordre de champs fixe, champs absents omis.
+// Le motif n'est ajouté EN FIN de tableau que s'il existe : les entrées antérieures gardent exactement leur empreinte.
 function contenu(e: Omit<Entree, 'hash' | 'sig'>): string {
-  return JSON.stringify([e.i, e.t, e.action, e.cible, e.rubriques, e.etab ?? null, e.acteur ?? null, e.prev])
+  const base: unknown[] = [e.i, e.t, e.action, e.cible, e.rubriques, e.etab ?? null, e.acteur ?? null, e.prev]
+  return JSON.stringify(e.motif ? [...base, e.motif] : base)
 }
 
 export class MemoireStockage implements Stockage {
@@ -72,7 +78,8 @@ export class Journal {
       const prev = toutes.length ? toutes[toutes.length - 1].hash : ZERO
       const base: Omit<Entree, 'hash' | 'sig'> = {
         i: toutes.length, t: this.now(), action: s.action, cible: s.cible, rubriques: s.rubriques,
-        ...(s.etab ? { etab: s.etab } : {}), ...(s.signataire ? { acteur: s.signataire.kid } : {}), prev,
+        ...(s.etab ? { etab: s.etab } : {}), ...(s.signataire ? { acteur: s.signataire.kid } : {}),
+        ...(s.motif && (MOTIFS_LECTURE as readonly string[]).includes(s.motif) ? { motif: s.motif } : {}), prev,
       }
       const hash = await sha256(contenu(base))
       const e: Entree = { ...base, hash, ...(s.signataire ? { sig: hex(nacl.sign.detached(unhex(hash), s.signataire.secretKey)) } : {}) }

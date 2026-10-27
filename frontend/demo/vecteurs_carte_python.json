@@ -1,0 +1,166 @@
+{
+  "cas": [
+    {
+      "nom": "complète, signée par le Python",
+      "texte": "L2:NCF*PD1TUFDJPRNW%ON8QKUS1TQ6I6N$KPZIKD0PI0EL4.J2VM64M1U%OG+S2+QR-SJZOBKL+-HQU1:T0*M5/E2FOJ5J051W*C0T$7AMINE5U-22$4SN7AEF03L7$G%GB523SP4J-CI:CG01:*0*SNSCAICBMF69Y6:CAC/B+PCMOKW19JEDTFEXKLKPSDJPVHLDX0Z*8P/I5$0KD1S1P**47E135T+OTSLP*.9RD9OD90.TTNI1K5M0S:PI/L34G8.SS2DJU/CINJ7AD/NIY7B/DC HJEWCGYIQVD*YJBHI KC7DJ US4LTW1JQZNL*KQZ6F78.HM4POYVE8+T6/O05C4AVJYR 2LJ04X%E3VP-HMH6FUK4 1DE/IQ+ELTUT4DHMB6PIH:AA-E.ZR7*KD28LQL14KPT5TTFJSTY+S+W7V+KZBNU7UIBE",
+      "maintenant": 1790000060,
+      "attendu": {
+        "ok": true,
+        "payload": {
+          "v": 2,
+          "id": "p-0123456789abcdef",
+          "iat": 1790000000,
+          "pr": {
+            "al": [
+              "PEN",
+              "QUIN"
+            ],
+            "tx": [
+              {
+                "c": "AVK",
+                "d": "T2:L10"
+              }
+            ],
+            "ah": [
+              "GROSSESSE"
+            ],
+            "vs": [
+              "GROSSESSE"
+            ],
+            "ec": {
+              "n": "Awa Hounsou ï",
+              "tel": "+229 01 23 45 67"
+            },
+            "gs": "AB-",
+            "yb": 1990,
+            "sx": "F"
+          },
+          "co": [
+            {
+              "t": 1789999940,
+              "f": "9ea17d",
+              "a": "809c25bc343c8e42",
+              "m": "FIEV",
+              "c": {
+                "temp": 390
+              }
+            }
+          ]
+        },
+        "kid": "809c25bc343c8e42",
+        "role": "medecin",
+        "iat": 1790000000,
+        "ageDays": 0,
+        "warnings": [],
+        "label": "Dr Démo (médecin)",
+        "etab": "9ea17d"
+      }
+    },
+    {
+      "nom": "minimale",
+      "texte": "L2:NCF*PD/RUYTMXD627W5RBV51Y/OC CVD9AA5QW0-Z0UCIGHJXG4F:M*NN POSPHS%HBXUJX978F+UJ+:T5HP$4BL:5DLE4TP+2K6WVB.SX2I$YV7 7K63DZE2*VCHJH6OX*RP-9F%EBGOAH9Q1AZ0V$GKZ5O.18HQUV50B:L A6",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": true,
+        "payload": {
+          "v": 2,
+          "id": "p-00000000",
+          "iat": 1790000000
+        },
+        "kid": "ccb02150dfdd3d41",
+        "role": "infirmier",
+        "iat": 1790000000,
+        "ageDays": 0,
+        "warnings": [],
+        "label": "Infirmier Démo",
+        "etab": "9ea17d"
+      }
+    },
+    {
+      "nom": "lien #L2B",
+      "texte": "https://lafia.example/#L2B:eNprYfJomKO6x8Smzyni1tLEMqakzJSiAl0DQyNjE1MzcwvLxKTklNS05MzEEqmsjdYNSQVFK5ISc5qSA1z9UgJDPf2SSioaFyUmJzuGeSempIUYWfkYGiQlZjRmugf5Bwe7AlFSWTEyLzV5UWJenmN5ooJHfmlecX6pwuH1ySWpOQXaRkaWCgaGCkbGCiamCmbmSenFyY5OukmVSZLsx5KKKxLdkpLzG5dCHOKSmJZmmZpoaJ6SmFhgYWCZbGSalGxsYpxskWpilJib4ubpGpaYvDClJDW3QJKxLcJBdFPsdcVtX832_dugppsft3WNyzexLHfGI0ZnJpX_deDyfGemWvKSzVbndf3b5KUWP6-qxJ7pLL973epk5KY9J6VbuAHup3C_",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": true,
+        "payload": {
+          "v": 2,
+          "id": "p-0123456789abcdef",
+          "iat": 1790000000,
+          "pr": {
+            "al": [
+              "PEN",
+              "QUIN"
+            ],
+            "tx": [
+              {
+                "c": "AVK",
+                "d": "T2:L10"
+              }
+            ],
+            "ah": [
+              "GROSSESSE"
+            ],
+            "vs": [
+              "GROSSESSE"
+            ],
+            "ec": {
+              "n": "Awa Hounsou ï",
+              "tel": "+229 01 23 45 67"
+            },
+            "gs": "AB-",
+            "yb": 1990,
+            "sx": "F"
+          },
+          "co": [
+            {
+              "t": 1789999940,
+              "f": "9ea17d",
+              "a": "809c25bc343c8e42",
+              "m": "FIEV",
+              "c": {
+                "temp": 390
+              }
+            }
+          ]
+        },
+        "kid": "809c25bc343c8e42",
+        "role": "medecin",
+        "iat": 1790000000,
+        "ageDays": 0,
+        "warnings": [],
+        "label": "Dr Démo (médecin)",
+        "etab": "9ea17d"
+      }
+    },
+    {
+      "nom": "signataire hors registre",
+      "texte": "L2:NCFW80T20RDW:C0.EQXNM*UE $M+6B$+KF-E%JCJVC78E746QF60R6J%6%470ECJPC% COPCIECCF3BIMGAGV9EZNKAEC3GGT6A-+9N3DCJC L5UPC6AGI6810CX9T.99JDQVPSU-09U9Y%LRG2QSIR.KQL19KCM2CPPH8N6*-D07B3%TSYPAXF2GB8N7C5UNRT84N2/25H4B4JWC76JQPI0KOCZ1",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "UNKNOWN_SIGNER",
+        "reason": "signataire inconnu ou révoqué"
+      }
+    },
+    {
+      "nom": "hors schéma",
+      "texte": "L2:NCF*PD1TUFDJPRNW%ON8Q%F4NED393YIAZH9XHGKHG$II6IHNJJ*%GFJC8KE1KD KEPKCSWAK/8/0H7NGB%G8-OYEHYE9UOVIM9QKGWGHUFDLJLJ2HDB5MEHDZ2 2J--8YE9B2P*5P-%2X$4MIHVA5W2K*ECWIP$NA2JAHI14C32E42MJS0A:H7T0K49R7P1V2THJK2X4$HAX.4F$DOCT/75RZ8W4IO%EZ1WS 55$MD3V6TU1CT-G9V*4WRNP62A:MZLL1JM5JL9IVO%VDO3%%B .8",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "BAD_SCHEMA",
+        "reason": "sx invalide"
+      }
+    },
+    {
+      "nom": "datée dans le futur",
+      "texte": "L2:NCF-90K10RDW:C0TBGUY47R6D:H48B$+KF-E%JCJVC78E746QF60R6J%6%470ECJPC% COPCIECCF3YAN820V9EZNKAEC3GGT6A-+9N3DCJC L5UPCOHGIECCF3BIM0T8O.CNB7-CC507:DCI8EF46EOCVX6FOC/Q6KOCXZCRG6E$D%*8KY81EC6IK7WEQ$DB73C:GK68C0P4GI:G7-XU7:QS9FVVVLXTKZNHHI-8U3CAMMV9SHQ-O7A7$8LTNISULOFVK7T*Z1/DA-CW%7H: F2/1KP6XQ3R/H9N9C.0/A7P1",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "FUTURE_DATE",
+        "reason": "date d'émission dans le futur (horloge ?)"
+      }
+    }
+  ]
+}

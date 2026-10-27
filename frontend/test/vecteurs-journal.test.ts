@@ -17,6 +17,8 @@ async function produire(): Promise<Entree[]> {
   await j.ajouterEntree({ action: 'LECTURE', cible: 'p-0123456789abcdef', rubriques: ['C0'] })
   await j.ajouterEntree({ action: 'LECTURE', cible: 'p-fedcba9876543210', rubriques: ['C0'], etab: ETAB, signataire: infirmier })
   await j.ajouterEntree({ action: 'ECRITURE', cible: 'p-0123456789abcdef', rubriques: ['C0'], etab: ETAB, signataire: medecin })
+  // Lecture sans badge avec motif (ajouté après coup : les 4 premières entrées gardent leurs empreintes d'origine).
+  await j.ajouterEntree({ action: 'LECTURE', cible: 'p-fedcba9876543210', rubriques: ['C0'], motif: 'INCONSCIENT' })
   return s.data
 }
 
@@ -26,6 +28,6 @@ describe('Vecteurs du journal partagés avec le backend', () => {
     if (process.env.LAFIA_ECRIRE_VECTEURS === '1') writeFileSync(FICHIER, JSON.stringify({ registre: REGISTRY, entrees }, null, 2) + '\n')
     const enregistres = JSON.parse(readFileSync(FICHIER, 'utf-8'))
     expect(entrees).toEqual(enregistres.entrees)
-    expect(await verifierChaine(enregistres.entrees, REGISTRY)).toEqual({ ok: true, nonSignees: 1, inconnues: 0 })
+    expect(await verifierChaine(enregistres.entrees, REGISTRY)).toEqual({ ok: true, nonSignees: 2, inconnues: 0 })
   })
 })

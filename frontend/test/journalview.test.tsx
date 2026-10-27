@@ -36,6 +36,12 @@ describe('« Mon journal » (vrai journal de l’appareil)', () => {
     expect(screen.getAllByRole('listitem').length).toBe(2)
   })
 
+  it('lecture sans badge : le patient voit le motif déclaré', async () => {
+    await journal.ajouterEntree({ action: 'LECTURE', cible: ID, rubriques: ['C0'], motif: 'NE_PARLE_PAS' })
+    render(<JournalView />)
+    await screen.findByText('Non vérifié · motif : Ne peut pas s’exprimer')
+  })
+
   it('« Simuler une altération » montre la rupture, sans modifier le vrai journal', async () => {
     for (let k = 0; k < 3; k++) await journal.ajouterEntree({ action: 'LECTURE', cible: ID, rubriques: ['C0'] })
     const avant = localStorage.getItem('lafia.journal')

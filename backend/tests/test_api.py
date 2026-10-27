@@ -40,7 +40,7 @@ def test_parcours_complet(client):
     j = jeton()
     assert client.post("/api/patients", json={"id": PATIENT, "jeton": j}).status_code == 201
     r = envoyer(client, V["entrees"])
-    assert r.status_code == 200 and r.json() == {"acceptees": 4, "deja_recues": 0, "prochain_rang": 4}
+    assert r.status_code == 200 and r.json() == {"acceptees": 5, "deja_recues": 0, "prochain_rang": 5}
     lu = client.get(f"/api/journal/patients/{PATIENT}", headers={"Authorization": f"Bearer {j}"})
     assert lu.status_code == 200
     entrees = lu.json()["entrees"]
@@ -53,7 +53,7 @@ def test_parcours_complet(client):
 def test_renvoi_identique_sans_effet_et_envoi_par_morceaux(client):
     assert envoyer(client, V["entrees"][:2]).json()["acceptees"] == 2
     r = envoyer(client, V["entrees"])          # l'appareil renvoie tout : les 2 premières sont reconnues
-    assert r.json() == {"acceptees": 2, "deja_recues": 2, "prochain_rang": 4}
+    assert r.json() == {"acceptees": 3, "deja_recues": 2, "prochain_rang": 5}
 
 
 def test_trou_dans_la_chaine_refuse(client):
@@ -65,7 +65,7 @@ def test_tout_ou_rien(client):
     b = copy.deepcopy(V["entrees"])
     b[2]["etab"] = "ffffff"                    # 3e entrée altérée
     assert envoyer(client, b).status_code == 422
-    assert envoyer(client, V["entrees"]).json()["acceptees"] == 4   # rien n'avait été gardé
+    assert envoyer(client, V["entrees"]).json()["acceptees"] == 5   # rien n'avait été gardé
 
 
 def test_reecriture_d_une_entree_deja_recue_refusee(client):
@@ -102,3 +102,31 @@ def test_identifiant_de_chaine_invalide(client):
 def test_envoi_vide_ou_trop_gros_refuse(client):
     assert envoyer(client, []).status_code == 422
     assert envoyer(client, [V["entrees"][0]] * 501).status_code == 422
+
+
+def test_identifiants_avec_saut_de_ligne_refuses(client):
+    assert client.get("/api/journal/patients/p-0123456789abcdef%0A", headers={"Authorization": "Bearer " + "j" * 40}).status_code == 422
+    assert envoyer(client, V["entrees"], chaine="c-" + "a1" * 8 + "%0A").status_code in (404, 422)
+
+
+def test_motif_rendu_au_patient(client):
+    j = jeton()
+    autre = V["entrees"][4]["cible"]
+    client.post("/api/patients", json={"id": autre, "jeton": j})
+    envoyer(client, V["entrees"])
+    lu = client.get(f"/api/journal/patients/{autre}", headers={"Authorization": f"Bearer {j}"}).json()["entrees"]
+    assert [(e["i"], e.get("motif"), e["statut"]) for e in lu] == [(4, "INCONSCIENT", "sans_badge"), (2, None, "signee")]
+
+
+def test_migration_d_une_base_sans_colonne_motif(tmp_path):
+    import sqlite3
+    from lafia.store import Store
+    db = tmp_path / "ancienne.db"
+    cx = sqlite3.connect(db)
+    cx.executescript("""CREATE TABLE entrees (chaine TEXT NOT NULL, i INTEGER NOT NULL, t INTEGER NOT NULL, action TEXT NOT NULL,
+      cible TEXT NOT NULL, rubriques TEXT NOT NULL, etab TEXT, acteur TEXT, prev TEXT NOT NULL, hash TEXT NOT NULL, sig TEXT,
+      statut TEXT NOT NULL, recu INTEGER NOT NULL, PRIMARY KEY (chaine, i));""")
+    cx.close()
+    s = Store(db)                                              # ouvre l'ancienne base : la colonne est ajoutée
+    reg = {k: v for k, v in V["registre"].items()}
+    assert s.ajouter(CHAINE, V["entrees"], reg)["acceptees"] == 5

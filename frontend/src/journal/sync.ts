@@ -80,10 +80,27 @@ export function demarrerSynchro() {
 
 export type EntreeServeur = Entree & { chaine: string; statut: 'signee' | 'sans_badge' | 'badge_inconnu' }
 
-function jetonPatient(): string {
+/** Le secret du patient (créé au premier besoin). Il ne quitte ce téléphone que dans le code de secours. */
+export function jetonPatient(): string {
   let j = lire(CLE_JETON)
   if (!j) { j = b64urlAleatoire(32); ecrire(CLE_JETON, j) }
   return j
+}
+
+/** Le serveur reconnaît-il ce secret pour cet identifiant ? (changement de téléphone) */
+export async function verifierJeton(id: string, jeton: string): Promise<'ok' | 'refuse' | 'injoignable'> {
+  try {
+    const r = await fetch(`${API}/journal/patients/${id}`, { headers: { Authorization: `Bearer ${jeton}` }, cache: 'no-store' })
+    if (r.ok) return 'ok'
+    return r.status === 401 ? 'refuse' : 'injoignable'
+  } catch { return 'injoignable' }
+}
+
+/** Ce téléphone reprend l'identité vérifiée d'un ancien téléphone. */
+export function adopterIdentite(id: string, jeton: string) {
+  ecrire(CLE_JETON, jeton)
+  ecrire(CLE_ENREGISTRE, id)
+  ecrire('lafia:c0-id', JSON.stringify(id))
 }
 
 /** Enregistre le patient auprès du serveur (une fois). Renvoie false si le serveur est injoignable ou refuse. */

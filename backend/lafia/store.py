@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS entrees (
   rubriques TEXT    NOT NULL,          -- JSON
   etab      TEXT,
   acteur    TEXT,
+  motif     TEXT,                    -- lecture sans badge : pourquoi (catalogue fermé)
   prev      TEXT    NOT NULL,
   hash      TEXT    NOT NULL,
   sig       TEXT,
@@ -51,7 +52,7 @@ def empreinte(jeton: str) -> str:
 
 def _ligne_vers_entree(r: sqlite3.Row) -> Entree:
     return Entree(i=r["i"], t=r["t"], action=r["action"], cible=r["cible"], rubriques=tuple(json.loads(r["rubriques"])),
-                  prev=r["prev"], hash=r["hash"], etab=r["etab"], acteur=r["acteur"], sig=r["sig"])
+                  prev=r["prev"], hash=r["hash"], etab=r["etab"], acteur=r["acteur"], sig=r["sig"], motif=r["motif"])
 
 
 class Conflit(Exception):
@@ -63,6 +64,10 @@ class Store:
         self.chemin = str(chemin)
         with self._cx() as cx:
             cx.executescript(SCHEMA)
+            # Migration d'une base créée avant l'ajout du motif : la colonne est ajoutée, les données restent.
+            colonnes = {r["name"] for r in cx.execute("PRAGMA table_info(entrees)")}
+            if "motif" not in colonnes:
+                cx.execute("ALTER TABLE entrees ADD COLUMN motif TEXT")
 
     def _cx(self) -> sqlite3.Connection:
         cx = sqlite3.connect(self.chemin, timeout=10, isolation_level=None)
@@ -78,7 +83,7 @@ class Store:
         Renvoyer des entrées déjà reçues (identiques) est sans effet : l'appareil peut réessayer sans risque.
         Une entrée déjà reçue mais DIFFÉRENTE est un conflit (chaîne réécrite ou fourchue) : refus.
         """
-        if not RX_CHAINE.match(chaine):
+        if not RX_CHAINE.fullmatch(chaine):
             raise EntreeInvalide("FORME", "identifiant de chaîne invalide")
         maintenant = maintenant or int(time.time())
         entrees = [Entree.depuis_dict(b) for b in brutes]
@@ -98,8 +103,8 @@ class Store:
                     raise Conflit(f"l'entrée {e.i} a déjà été reçue avec un autre contenu")
                 statut = verifier_entree(e, suivant, prev, registre, maintenant)
                 cx.execute(
-                    "INSERT INTO entrees (chaine,i,t,action,cible,rubriques,etab,acteur,prev,hash,sig,statut,recu) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                    (chaine, e.i, e.t, e.action, e.cible, json.dumps(list(e.rubriques)), e.etab, e.acteur, e.prev, e.hash, e.sig, statut, maintenant),
+                    "INSERT INTO entrees (chaine,i,t,action,cible,rubriques,etab,acteur,motif,prev,hash,sig,statut,recu) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (chaine, e.i, e.t, e.action, e.cible, json.dumps(list(e.rubriques)), e.etab, e.acteur, e.motif, e.prev, e.hash, e.sig, statut, maintenant),
                 )
                 suivant, prev = e.i + 1, e.hash
                 acceptees += 1

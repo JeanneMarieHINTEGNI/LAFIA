@@ -1,22 +1,22 @@
 {
   "registre": {
+    "67d07800071d2c44": {
+      "etab": "9ea17d",
+      "label": "Relais Démo",
+      "pub": "67d07800071d2c4412fa4deb286562bda06e340fc09e2a57184f501ec57ce8c7",
+      "role": "relais"
+    },
     "809c25bc343c8e42": {
-      "pub": "809c25bc343c8e42d0f4dc1f3b07e51112637982af7ed66dde3b29d5ebcd02d8",
-      "role": "medecin",
+      "etab": "9ea17d",
       "label": "Dr Démo (médecin)",
-      "etab": "9ea17d"
+      "pub": "809c25bc343c8e42d0f4dc1f3b07e51112637982af7ed66dde3b29d5ebcd02d8",
+      "role": "medecin"
     },
     "ccb02150dfdd3d41": {
-      "pub": "ccb02150dfdd3d4108f978abf54d9fb61ee3df8335ee875f8809974dd08234cc",
-      "role": "infirmier",
+      "etab": "9ea17d",
       "label": "Infirmier Démo",
-      "etab": "9ea17d"
-    },
-    "67d07800071d2c44": {
-      "pub": "67d07800071d2c4412fa4deb286562bda06e340fc09e2a57184f501ec57ce8c7",
-      "role": "relais",
-      "label": "Relais Démo",
-      "etab": "9ea17d"
+      "pub": "ccb02150dfdd3d4108f978abf54d9fb61ee3df8335ee875f8809974dd08234cc",
+      "role": "infirmier"
     }
   },
   "entrees": [
@@ -72,6 +72,18 @@
       "prev": "0bde433f61ed60e1c4945b4e0a53dbf0fa189bf96d76e507865dd397f20eea5d",
       "hash": "91d3152703004f7082c6cd094475f5fe3bdabfe3179a2fc7432c074be281798a",
       "sig": "f472ce17453d647dc2af37e2fc5a2cba8f156e1b0114d38ae359d55607deaead5eb62f26d2c040b84575dc8229cf60b85f21aab76593cf995269be81c9e2b907"
+    },
+    {
+      "i": 4,
+      "t": 1790000300,
+      "action": "LECTURE",
+      "cible": "p-fedcba9876543210",
+      "rubriques": [
+        "C0"
+      ],
+      "motif": "INCONSCIENT",
+      "prev": "91d3152703004f7082c6cd094475f5fe3bdabfe3179a2fc7432c074be281798a",
+      "hash": "c5cbbc783a453abf4c14ea3d2ab9d56dd342b6ccfaad40c00a57bcf2163e67e1"
     }
   ]
 }

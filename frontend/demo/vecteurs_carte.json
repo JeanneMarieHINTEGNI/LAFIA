@@ -1,0 +1,398 @@
+{
+  "registre": {
+    "67d07800071d2c44": {
+      "etab": "9ea17d",
+      "label": "Relais Démo",
+      "pub": "67d07800071d2c4412fa4deb286562bda06e340fc09e2a57184f501ec57ce8c7",
+      "role": "relais"
+    },
+    "809c25bc343c8e42": {
+      "etab": "9ea17d",
+      "label": "Dr Démo (médecin)",
+      "pub": "809c25bc343c8e42d0f4dc1f3b07e51112637982af7ed66dde3b29d5ebcd02d8",
+      "role": "medecin"
+    },
+    "ccb02150dfdd3d41": {
+      "etab": "9ea17d",
+      "label": "Infirmier Démo",
+      "pub": "ccb02150dfdd3d4108f978abf54d9fb61ee3df8335ee875f8809974dd08234cc",
+      "role": "infirmier"
+    }
+  },
+  "cas": [
+    {
+      "nom": "complète, signée médecin",
+      "texte": "L2:NCF*PD1TUFDJPRNW%ON8QULIBWE3IC0OA--CUDAX2M6JK:JM$JLIKNY C1JAFI9OJBK.CBGH:3R*YT*ZK3MKFD9:A7MIPU2M5B5JJKJ/F/U46 9UF2-QINXO.J2:HA5R1OXFV-2+*4ROFKV01SVYW4TQ6URFC77-SNQHN697IMV5%I927BNRPLP H2-UUMZU+QHNV2IAGP0GTSO5.IBY4H97XQRP-8AF1U3TCY0C44+KC2YIO$J29MCVACT45*7NKL3I4-V5ND7KCDBFR-QUWGHUFDLJLJ2HDB5MEHDZ2 2J--8YE9B2P*5P-%2X$4MIHVA5W2K*ECPLP$NA2JAHI1O83XGA%RUBPA+X4ZLEKF16QRJD3YW4*:4%BN$X4TU40GVX.4J4L-C0JMI9R3NH8AJ2OAG.O2 H2NFGOIA/TOQ%J%QA844TA1+7VGRVYXCOTIOQIWVHFX97LAEIADXHSR9-HGTN7DS04S8+YLRKN8Z5OJ7:BMJ*6+/T8FBI7KDKLU+D2J5W%0%TSLMJ6NS9VJQ-N$1R6ICW JH7R%RS13O1%C8K7K4KB:E/8W DC0AP%/A196F+CC10$G464",
+      "maintenant": 1790000060,
+      "attendu": {
+        "ok": true,
+        "payload": {
+          "v": 2,
+          "id": "p-0123456789abcdef",
+          "iat": 1790000000,
+          "pr": {
+            "al": [
+              "PEN",
+              "QUIN"
+            ],
+            "tx": [
+              {
+                "c": "AVK",
+                "d": "T1:L3"
+              },
+              {
+                "c": "INSUL"
+              }
+            ],
+            "ah": [
+              "HTA",
+              "DREPANO"
+            ],
+            "vs": [
+              "DREPANO"
+            ],
+            "ec": {
+              "n": "Kossi Dossou é",
+              "tel": "+229 97 00 00 41"
+            },
+            "gs": "O+",
+            "yb": 1951,
+            "sx": "F"
+          },
+          "co": [
+            {
+              "t": 1789992800,
+              "f": "9ea17d",
+              "a": "809c25bc343c8e42",
+              "m": "FIEV",
+              "c": {
+                "temp": 392,
+                "poids": 620,
+                "pt": 1789992800
+              },
+              "x": [
+                {
+                  "k": "TDR",
+                  "v": "POS"
+                }
+              ],
+              "adm": [
+                {
+                  "c": "ARTE",
+                  "h": 1789993000
+                }
+              ],
+              "o": {
+                "k": "EVAC",
+                "d": "ffffff"
+              }
+            },
+            {
+              "t": 1786544000,
+              "f": "9ea17d",
+              "a": "ccb02150dfdd3d41",
+              "m": "CTRL"
+            }
+          ]
+        },
+        "kid": "809c25bc343c8e42",
+        "role": "medecin",
+        "label": "Dr Démo (médecin)",
+        "etab": "9ea17d",
+        "iat": 1790000000,
+        "ageDays": 0,
+        "warnings": []
+      }
+    },
+    {
+      "nom": "minimale",
+      "texte": "L2:NCF*PD1TUFDJPRNW%ON8Q8I81FE393YIA+H9XHG6604R4N*4%694*D /DF7EX+I4%BMLO2DQV*QK%TETOHX9M0EDKTC-SCEF31L4V8RM9WCEF/URQMD3H/:D0OA6*COYFLR4GIKC$BQ.83719K4Y1U7.6VWERPHU10 /6+2",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": true,
+        "payload": {
+          "v": 2,
+          "id": "p-00000000",
+          "iat": 1790000000
+        },
+        "kid": "809c25bc343c8e42",
+        "role": "medecin",
+        "label": "Dr Démo (médecin)",
+        "etab": "9ea17d",
+        "iat": 1790000000,
+        "ageDays": 0,
+        "warnings": []
+      }
+    },
+    {
+      "nom": "lien #L2B",
+      "texte": "https://lafia.example/app#L2B:eNprYfJomKO6x8SmzymSMXRpYhlTUmZKUYGugaGRsYmpmbmFZWJSckpqWnJmYolU1kbrhqSCohVJiTlNyQGufimBoZ5-SSUVTYsSk5Mdw7wTU1JDDK18jBcmJqd6-gWH-iQlZjQle4Q4prsEuQY4-vknlRU3wtmpyYsS8_K984uLMxVcgGR-qcLhlcklqTkF2kZGlgqW5goGBiBkYpiUXpzkr51UmSTJPj-puCLRLSk5v2kF2EHyCYlpaZapiYbmKYmJBRYGlslGpknJxibGyRapJkaJuSlunq5hicmLU0pScwskGTtSC_IzU4olmXKSCqDaKxoXJWYnh7gEJZYlB_gHJyem5AJFklMcg0JcEzOAahQ0EvOBSlJcwxydE1PSIGAJyPaa-gZk25OTkwyMDE0NUtJSUoxTTAyBtjuHBPlEOKw_uY4tvDrOsCE2ZO0cWa6fgamubfsq5gbO4ruaPuGNm8e9PtXlYhycv9bf4mG-YGWbOuue_HaF_rNhWceDVs8xDGYDADkimbo",
+      "maintenant": 1790000060,
+      "attendu": {
+        "ok": true,
+        "payload": {
+          "v": 2,
+          "id": "p-0123456789abcdef",
+          "iat": 1790000000,
+          "pr": {
+            "al": [
+              "PEN",
+              "QUIN"
+            ],
+            "tx": [
+              {
+                "c": "AVK",
+                "d": "T1:L3"
+              },
+              {
+                "c": "INSUL"
+              }
+            ],
+            "ah": [
+              "HTA",
+              "DREPANO"
+            ],
+            "vs": [
+              "DREPANO"
+            ],
+            "ec": {
+              "n": "Kossi Dossou é",
+              "tel": "+229 97 00 00 41"
+            },
+            "gs": "O+",
+            "yb": 1951,
+            "sx": "F"
+          },
+          "co": [
+            {
+              "t": 1789992800,
+              "f": "9ea17d",
+              "a": "809c25bc343c8e42",
+              "m": "FIEV",
+              "c": {
+                "temp": 392,
+                "poids": 620,
+                "pt": 1789992800
+              },
+              "x": [
+                {
+                  "k": "TDR",
+                  "v": "POS"
+                }
+              ],
+              "adm": [
+                {
+                  "c": "ARTE",
+                  "h": 1789993000
+                }
+              ],
+              "o": {
+                "k": "EVAC",
+                "d": "ffffff"
+              }
+            },
+            {
+              "t": 1786544000,
+              "f": "9ea17d",
+              "a": "ccb02150dfdd3d41",
+              "m": "CTRL"
+            }
+          ]
+        },
+        "kid": "809c25bc343c8e42",
+        "role": "medecin",
+        "label": "Dr Démo (médecin)",
+        "etab": "9ea17d",
+        "iat": 1790000000,
+        "ageDays": 0,
+        "warnings": []
+      }
+    },
+    {
+      "nom": "ancienne (> 30 jours) : avertissement",
+      "texte": "L2:NCF*PD1TUFDJPRNW%ON8QULIBWE3IC0OA--CUDAX2M6JK:JM$JLIKNY C1JAFI9OJBK.CBGH:3R*YT*ZK3MKFD9:A7MIPU2M5B5JJKJ/F/U46 9UF2-QINXO.J2:HA5R1OXFV-2+*4ROFKV01SVYW4TQ6URFC77-SNQHN697IMV5%I927BNRPLP H2-UUMZU+QHNV2IAGP0GTSO5.IBY4H97XQRP-8AF1U3TCY0C44+KC2YIO$J29MCVACT45*7NKL3I4-V5ND7KCDBFR-QUWGHUFDLJLJ2HDB5MEHDZ2 2J--8YE9B2P*5P-%2X$4MIHVA5W2K*ECPLP$NA2JAHI1O83XGA%RUBPA+X4ZLEKF16QRJD3YW4*:4%BN$X4TU40GVX.4J4L-C0JMI9R3NH8AJ2OAG.O2 H2NFGOIA/TOQ%J%QA844TA1+7VGRVYXCOTIOQIWVHFX97LAEIADXHSR9-HGTN7DS04S8+YLRKN8Z5OJ7:BMJ*6+/T8FBI7KDKLU+D2J5W%0%TSLMJ6NS9VJQ-N$1R6ICW JH7R%RS13O1%C8K7K4KB:E/8W DC0AP%/A196F+CC10$G464",
+      "maintenant": 1793888000,
+      "attendu": {
+        "ok": true,
+        "payload": {
+          "v": 2,
+          "id": "p-0123456789abcdef",
+          "iat": 1790000000,
+          "pr": {
+            "al": [
+              "PEN",
+              "QUIN"
+            ],
+            "tx": [
+              {
+                "c": "AVK",
+                "d": "T1:L3"
+              },
+              {
+                "c": "INSUL"
+              }
+            ],
+            "ah": [
+              "HTA",
+              "DREPANO"
+            ],
+            "vs": [
+              "DREPANO"
+            ],
+            "ec": {
+              "n": "Kossi Dossou é",
+              "tel": "+229 97 00 00 41"
+            },
+            "gs": "O+",
+            "yb": 1951,
+            "sx": "F"
+          },
+          "co": [
+            {
+              "t": 1789992800,
+              "f": "9ea17d",
+              "a": "809c25bc343c8e42",
+              "m": "FIEV",
+              "c": {
+                "temp": 392,
+                "poids": 620,
+                "pt": 1789992800
+              },
+              "x": [
+                {
+                  "k": "TDR",
+                  "v": "POS"
+                }
+              ],
+              "adm": [
+                {
+                  "c": "ARTE",
+                  "h": 1789993000
+                }
+              ],
+              "o": {
+                "k": "EVAC",
+                "d": "ffffff"
+              }
+            },
+            {
+              "t": 1786544000,
+              "f": "9ea17d",
+              "a": "ccb02150dfdd3d41",
+              "m": "CTRL"
+            }
+          ]
+        },
+        "kid": "809c25bc343c8e42",
+        "role": "medecin",
+        "label": "Dr Démo (médecin)",
+        "etab": "9ea17d",
+        "iat": 1790000000,
+        "ageDays": 45,
+        "warnings": [
+          "carte émise il y a 45 jours : des données plus récentes peuvent exister"
+        ]
+      }
+    },
+    {
+      "nom": "falsifiée (1 caractère)",
+      "texte": "L2:NCF*PD1TUFDJPRNW%ON8QULIBWE3IC0OA--CUDAX2M6JK:JM$JLIKNY C1JAFI9OJBK.CBGH:3R*YT*ZK3MKFD9:A7MIPU2M5B5JJKJ/F/U46 9UF2-QINXO.J2:HA5R1OXFV-2+*4ROFKV01SVYW4TQ6URFC77-SNQHN697IMV5%I927BNRPLP H2-UUMZU+QHNV2IAGP0GTSO5.IBY4H97XQRP-8AF1U3TCY0C44+KC2YIO$J29MCVACT45*7NKL3I4-V5ND7KCDBFR-QUWGHUFDLJLJ2HDB5MEHDA2 2J--8YE9B2P*5P-%2X$4MIHVA5W2K*ECPLP$NA2JAHI1O83XGA%RUBPA+X4ZLEKF16QRJD3YW4*:4%BN$X4TU40GVX.4J4L-C0JMI9R3NH8AJ2OAG.O2 H2NFGOIA/TOQ%J%QA844TA1+7VGRVYXCOTIOQIWVHFX97LAEIADXHSR9-HGTN7DS04S8+YLRKN8Z5OJ7:BMJ*6+/T8FBI7KDKLU+D2J5W%0%TSLMJ6NS9VJQ-N$1R6ICW JH7R%RS13O1%C8K7K4KB:E/8W DC0AP%/A196F+CC10$G464",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "BAD_SIGNATURE",
+        "reason": "signature invalide : carte modifiée"
+      }
+    },
+    {
+      "nom": "signataire hors registre",
+      "texte": "L2:NCF*PD UUFIS9MPQT82ZP1BH4M9AXPVLIBPALE1AT1B+HXY9Y0Q:V5GL2JMI8LAWLIYJ2. K9*6V/6-T2UW5NK91ED6$1K0VVH5V8DFZIM$J:135TS/CJ4F3XBDUQCFZIGMQ/$T3TS2YIO$J29MCVACT4Z.FNKL3I4-V5ND7YDE7ER60S1*OFU6P$QPQ8E I-$O%N2SUIQP4:NCTOE.UKNP4AL6C27-0QMW6KB6LDCTC9T/D0R4SPB9RGSN8UIR+686%VVQMG5OE%L+IS1P3BWVGKNTMLCO3WVM:6S IP7%11QT8WCN.SOEQNQVLKL3%QK.LV8SPYAPNV9AWGNRP717%8CN1 GAXRB",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "UNKNOWN_SIGNER",
+        "reason": "signataire inconnu ou révoqué"
+      }
+    },
+    {
+      "nom": "signature d’un autre badge",
+      "texte": "L2:NCF*PD1TUFDJPRNW%ON8QGMC1TQ6I6N$KPZIKD0PI0EL4.J2VM64M1U%OG+S2+QR-SJZOBKL+-HQU1:T04XP/E28G35J0O2W-G9JD3FV4D6L4$0RCN03L%.GOMBI23YW4UQ6URFJ478*KI25QODIYABE91/3 H5879EN9H4QRSBW%6Z6NY96F.P7 6SEQQV49LM-ROCJ6.DP3D57IRI877I4-ZO:96C0POVQIQ5NFFRH9LKDUEGAPC0VG$TEPOT 1HX+P%YFP11-%ATPB1XU%V1$0MS:4W03CENV3VMRCR9QUQFHHL6L9437E%NP VESVNW8 :HXH97.SXQF8BRL3AG:R0AMKS0T+EAAB",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "BAD_SIGNATURE",
+        "reason": "signature invalide : carte modifiée"
+      }
+    },
+    {
+      "nom": "hors schéma (groupe inventé)",
+      "texte": "L2:NCF*PD1TUFDJPRNW%ON8Q9G4NED393YIAZH9XHGKHG$II6IHNJJ*%GFJC8KE1KD KEPKCSWAK/8/0H7NGB%G+OT4C9 QR0OP %HPLOBNNWGHUFDLJLJ2HDB5MEHDZ2 2J--8YE9B2P*5P-%2X$4MIHVA5W2K*ECWIP$NA2JAHI14C32E4AWCZUL-4N231O/D+5ORTF*9P%.N+5TA$7C NR4CNL9NMNEK1F0FXJ7 YCNRF.RKY:E$+PUD5W6K+BA-EA2P58VGWUN1%L+XK+THGDFKARD*8",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "BAD_SCHEMA",
+        "reason": "gs invalide"
+      }
+    },
+    {
+      "nom": "hors schéma (sensible sans accord)",
+      "texte": "L2:NCF*PD1TUFDJPRNW%ON8Q:F4NED393YIAZH9XHGKHG$II6IHNJJ*%GFJC8KE1KD KEPKCSWAK/8/0H7NGB%G.EHR-HFFCD$30OP %H:MOBNNWGHUFDLJLJ2HDB5MEHDZ2 2J--8YE9B2P*5P-%2X$4MIHVA5W2K*ECWIP$NA2JAHI14C32E4T*50 PGX96Q7-LCU3O3-NCB3 1SF2FEONJJJT3WZ-V6RAI-B1-F-GFSJSO3U1XL./4Q+5D$NF.CW9W4Z0T*JNUSB+F55MANQQ:F4VCV50/65L 9",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "BAD_SCHEMA",
+        "reason": "VIH: catégorie sensible hors C0 sans choix explicite du patient (pr.vs)"
+      }
+    },
+    {
+      "nom": "hors schéma (clé inconnue)",
+      "texte": "L2:NCF*PD1TUFDJPRNW%ON8QKMC:QM6I6N$KPZIKD0PI0EL4.J2VM64M1U%OG+S2+QR-SJZOBKL+-HQU1:T04XP/E28G35J0O2W-G9JD3FV4D6L4$0RCN03L%.GOMBI23YW4UQ6URFJ478*KI25QODIYABE91/3 H5879EN9H4QRSBW%6Z6NY96F.P7 6SEQQV49LM-ROCJ6.DP3D57IRI877I4-ZO:96C0POVQIQ5NFFRH9LKDUEGAPCNJBPKD7DAI81CZGZ UEUD4PI7N1I5MNBVDKQSNSU-IP79U8JWYR59RSK5OCUGTS+ O+FEAFH6TN0-B XKKZ4LXMQ/FXTF:$S%AN-LBFK7J0G6/V5HLYBNDU0LPB",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "BAD_SCHEMA",
+        "reason": "C0: clés inconnues secret"
+      }
+    },
+    {
+      "nom": "hors schéma (poids sans date)",
+      "texte": "L2:NCF*PD1TUFDJPRNW%ON8Q3NC1TQ6I6N$KPZIKD0PI0EL4.J2VM64M1U%OG+S2+QR-SJZOBKL+-HQU1:T04XP/E28G35J0O2W-G9JD3FV4D6L4$0RCN03L%.GOMBI23YW4UQ6URFJ478*KI25QODIYABE91/3 H5879EN9H4QRSBEW6Y96F.P7 6SEQQV49LM-ROCJ6.DP3D57IRI877I4-ZO:96C0POVQIQ5NFFLJD3:F-J9TQ4ZT8DYO4DUDO1*%R XBPZU35QJ1N66MF6LE6EO/5T:RPBU6UN6M37/PCQ596AY/F*WFUE33%DC*GM29-NU8476M357P2K6NARBYMFYQ/1W1A09*6R2",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "BAD_SCHEMA",
+        "reason": "co[0].c.pt: entier attendu entre 1600000000 et 4000000000"
+      }
+    },
+    {
+      "nom": "datée dans le futur",
+      "texte": "L2:NCF*PD1TUFDJPRNW%ON8QGMC1TQ6I6N$KPZIKD0PI0EL4.J2VM64M1U%OG+S2+QR-SJZOBKLE*L+O1:T04XP/E28G35J0O2W-G9JD3FV4D6L4$0RCN03L%.GOMBI23YW4UQ6URFJ478*KI25QODIYABE91/3 H5879EN9H4QRSBUG6XTK/B8JKB. C8PK0FFVJC$GG5GG%PM7EDPQM+GH7OM7PL:CA%/DMUJUPD+MC.QODPIR RVE9P0N:5HI$7:LT2ML.C1M3718F$NCH/VLFW6 TV2PDP3NAW6P7TJ9*1MO.0GTDG9OBQD.0F LUCYVA3QU9QYH31TD8CE/VUESH8BF.8Q+6RN017XG4NB",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "FUTURE_DATE",
+        "reason": "date d'émission dans le futur (horloge ?)"
+      }
+    },
+    {
+      "nom": "illisible",
+      "texte": "L2:%%%%",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "UNREADABLE",
+        "reason": "QR illisible"
+      }
+    },
+    {
+      "nom": "sans préfixe",
+      "texte": "bonjour",
+      "maintenant": 1790000000,
+      "attendu": {
+        "ok": false,
+        "code": "UNREADABLE",
+        "reason": "QR illisible"
+      }
+    }
+  ]
+}
