@@ -1,0 +1,6 @@
+{
+  "v": 1,
+  "autorite": "12b0c7ae3204a161",
+  "contenu": "{\"badges\":{\"67d07800071d2c44\":{\"etab\":\"9ea17d\",\"label\":\"Relais Démo\",\"pub\":\"67d07800071d2c4412fa4deb286562bda06e340fc09e2a57184f501ec57ce8c7\",\"role\":\"relais\"},\"809c25bc343c8e42\":{\"etab\":\"9ea17d\",\"label\":\"Dr Démo (médecin)\",\"pub\":\"809c25bc343c8e42d0f4dc1f3b07e51112637982af7ed66dde3b29d5ebcd02d8\",\"role\":\"medecin\"},\"ccb02150dfdd3d41\":{\"etab\":\"9ea17d\",\"label\":\"Infirmier Démo\",\"pub\":\"ccb02150dfdd3d4108f978abf54d9fb61ee3df8335ee875f8809974dd08234cc\",\"role\":\"infirmier\"}},\"emis\":1793098016,\"version\":1}",
+  "sig": "cc35ab25883afbc7387190d58daa44ba716fe4880c5170796ca7d6d4193d2ae6c4e8e20a56dcf16f97683f301cf7ac545789a2391af918960cc63961b983830b"
+}

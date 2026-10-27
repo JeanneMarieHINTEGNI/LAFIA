@@ -1,0 +1,15 @@
+lafia.fyra.fun {
+	import secure
+	# Static React app: own scripts only, inline styles (React style props), self-hosted fonts, data: QR/images.
+	header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+	# /api/* → backend Python (conteneur lafia-api, voir le dépôt backend). Tout le reste → le site.
+	handle /api/* {
+		request_body {
+			max_size 1MB
+		}
+		reverse_proxy lafia-api:8000
+	}
+	handle {
+		reverse_proxy lafia-web:8080
+	}
+}

@@ -1,0 +1,20 @@
+{
+  "809c25bc343c8e42": {
+    "pub": "809c25bc343c8e42d0f4dc1f3b07e51112637982af7ed66dde3b29d5ebcd02d8",
+    "role": "medecin",
+    "label": "Dr Démo (médecin)",
+    "etab": "9ea17d"
+  },
+  "ccb02150dfdd3d41": {
+    "pub": "ccb02150dfdd3d4108f978abf54d9fb61ee3df8335ee875f8809974dd08234cc",
+    "role": "infirmier",
+    "label": "Infirmier Démo",
+    "etab": "9ea17d"
+  },
+  "67d07800071d2c44": {
+    "pub": "67d07800071d2c4412fa4deb286562bda06e340fc09e2a57184f501ec57ce8c7",
+    "role": "relais",
+    "label": "Relais Démo",
+    "etab": "9ea17d"
+  }
+}

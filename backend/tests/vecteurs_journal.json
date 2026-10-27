@@ -1,0 +1,77 @@
+{
+  "registre": {
+    "809c25bc343c8e42": {
+      "pub": "809c25bc343c8e42d0f4dc1f3b07e51112637982af7ed66dde3b29d5ebcd02d8",
+      "role": "medecin",
+      "label": "Dr Démo (médecin)",
+      "etab": "9ea17d"
+    },
+    "ccb02150dfdd3d41": {
+      "pub": "ccb02150dfdd3d4108f978abf54d9fb61ee3df8335ee875f8809974dd08234cc",
+      "role": "infirmier",
+      "label": "Infirmier Démo",
+      "etab": "9ea17d"
+    },
+    "67d07800071d2c44": {
+      "pub": "67d07800071d2c4412fa4deb286562bda06e340fc09e2a57184f501ec57ce8c7",
+      "role": "relais",
+      "label": "Relais Démo",
+      "etab": "9ea17d"
+    }
+  },
+  "entrees": [
+    {
+      "i": 0,
+      "t": 1790000060,
+      "action": "LECTURE",
+      "cible": "p-0123456789abcdef",
+      "rubriques": [
+        "C0"
+      ],
+      "etab": "9ea17d",
+      "acteur": "809c25bc343c8e42",
+      "prev": "0000000000000000000000000000000000000000000000000000000000000000",
+      "hash": "88ad5a8f3132b4fee32eb3b70a5b520bba58f73ceb178d919d8cb12ddbc73276",
+      "sig": "7385fa6ac55219337e717354005f5875f0365665ab6662eb2edf83a27fdd701666ce62265dc6561b45462ffe40197e1a2e0e093d0f15b365b0fc1ea0bb68cd09"
+    },
+    {
+      "i": 1,
+      "t": 1790000120,
+      "action": "LECTURE",
+      "cible": "p-0123456789abcdef",
+      "rubriques": [
+        "C0"
+      ],
+      "prev": "88ad5a8f3132b4fee32eb3b70a5b520bba58f73ceb178d919d8cb12ddbc73276",
+      "hash": "b450cd9c1f4186d9e03aba885e6847770df8a30a197014d1c3fe8ab28caa86b5"
+    },
+    {
+      "i": 2,
+      "t": 1790000180,
+      "action": "LECTURE",
+      "cible": "p-fedcba9876543210",
+      "rubriques": [
+        "C0"
+      ],
+      "etab": "9ea17d",
+      "acteur": "ccb02150dfdd3d41",
+      "prev": "b450cd9c1f4186d9e03aba885e6847770df8a30a197014d1c3fe8ab28caa86b5",
+      "hash": "0bde433f61ed60e1c4945b4e0a53dbf0fa189bf96d76e507865dd397f20eea5d",
+      "sig": "9f3c6143e8c9f4e69c1470b70c7de4b84e54f29be7184281aded370e06aec360e39411049b53796688e396ebc9c8576425fb5ae5a7fc0fa5fd8286b836ae6d09"
+    },
+    {
+      "i": 3,
+      "t": 1790000240,
+      "action": "ECRITURE",
+      "cible": "p-0123456789abcdef",
+      "rubriques": [
+        "C0"
+      ],
+      "etab": "9ea17d",
+      "acteur": "809c25bc343c8e42",
+      "prev": "0bde433f61ed60e1c4945b4e0a53dbf0fa189bf96d76e507865dd397f20eea5d",
+      "hash": "91d3152703004f7082c6cd094475f5fe3bdabfe3179a2fc7432c074be281798a",
+      "sig": "f472ce17453d647dc2af37e2fc5a2cba8f156e1b0114d38ae359d55607deaead5eb62f26d2c040b84575dc8229cf60b85f21aab76593cf995269be81c9e2b907"
+    }
+  ]
+}

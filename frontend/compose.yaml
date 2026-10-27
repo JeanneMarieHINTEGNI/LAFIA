@@ -1,0 +1,28 @@
+# Production on the shared server: behind the common Caddy (~/apps/edge), reached only through the
+# "edge" network, never published on the host. Site block: ~/apps/edge/sites/lafia.caddy.
+name: lafia
+
+services:
+  web:
+    build: .
+    image: lafia:local
+    container_name: lafia-web   # stable name, what Caddy resolves
+    restart: unless-stopped
+    networks: [edge]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 64m
+    pids_limit: 32
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:8080/"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+    logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
+
+networks:
+  edge:
+    name: edge
+    external: true

@@ -1,0 +1,29 @@
+# Production sur le serveur partagé, à côté du frontend (lafia-web). Caddy envoie /api/* vers ce conteneur.
+name: lafia-api
+
+services:
+  api:
+    build: .
+    image: lafia-api:local
+    container_name: lafia-api   # nom stable, celui que Caddy résout
+    restart: unless-stopped
+    networks: [edge]
+    read_only: true
+    tmpfs: [/tmp]
+    volumes:
+      - lafia-data:/data         # base SQLite : à sauvegarder
+      # Registre signé, lu en direct : une révocation (python -m lafia.registre revoquer …) s'applique sans redémarrer.
+      - ./registre:/registre:ro
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 128m
+    pids_limit: 64
+    logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
+
+volumes:
+  lafia-data:
+
+networks:
+  edge:
+    name: edge
+    external: true
