@@ -88,10 +88,11 @@ export function jetonPatient(): string {
 }
 
 /** Le serveur reconnaît-il ce secret pour cet identifiant ? (changement de téléphone) */
-export async function verifierJeton(id: string, jeton: string): Promise<'ok' | 'refuse' | 'injoignable'> {
+export async function verifierJeton(id: string, jeton: string): Promise<'ok' | 'refuse' | 'trop' | 'injoignable'> {
   try {
     const r = await fetch(`${API}/journal/patients/${id}`, { headers: { Authorization: `Bearer ${jeton}` }, cache: 'no-store' })
     if (r.ok) return 'ok'
+    if (r.status === 429) return 'trop'          // trop d'essais refusés depuis cette adresse : le serveur bloque un moment
     return r.status === 401 ? 'refuse' : 'injoignable'
   } catch { return 'injoignable' }
 }

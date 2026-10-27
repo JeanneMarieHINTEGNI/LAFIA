@@ -109,6 +109,7 @@ export function RestaurerEspace({ onRestaure, onAnnuler }: { onRestaure: (r: Res
       if (!lu.ok) { setErreur(lu.erreur); return }
       const v = await verifierJeton(lu.id, lu.jeton)
       if (v === 'refuse') { setErreur('Le serveur ne reconnaît pas ce code de secours. Vérifiez qu’il s’agit bien de votre fiche la plus récente.'); return }
+      if (v === 'trop') { setErreur('Trop d’essais de codes depuis ce réseau : par sécurité, le serveur bloque les essais pendant quelques minutes. Réessayez plus tard.'); return }
       if (v === 'injoignable') {
         setErreur('Connexion nécessaire : seul le serveur peut confirmer votre code. C’est ce qui empêche quelqu’un d’autre de prendre votre espace. Réessayez avec du réseau.')
         return

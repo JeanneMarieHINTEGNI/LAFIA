@@ -20,6 +20,25 @@ services:
     pids_limit: 64
     logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
 
+  # Sauvegarde quotidienne de la base (copie à chaud vérifiée, 14 dernières gardées) dans ./sauvegardes sur l'hôte.
+  # À copier AUSSI ailleurs régulièrement : une sauvegarde sur le même disque ne protège pas d'une panne du disque.
+  sauvegarde:
+    image: lafia-api:local
+    container_name: lafia-sauvegarde
+    restart: unless-stopped
+    network_mode: none          # n'a besoin d'aucun réseau
+    read_only: true
+    tmpfs: [/tmp]
+    volumes:
+      - lafia-data:/data        # lecture de la base (SQLite en mode WAL a besoin d'écrire ses fichiers annexes)
+      - ./sauvegardes:/sauvegardes
+    entrypoint: ["sh", "-c", "while true; do python -m lafia.sauvegarde creer --db /data/lafia.db --dossier /sauvegardes --garder 14; sleep 86400; done"]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    mem_limit: 64m
+    depends_on: [api]
+    logging: { driver: json-file, options: { max-size: "1m", max-file: "3" } }
+
 volumes:
   lafia-data:
 

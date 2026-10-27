@@ -87,6 +87,42 @@ en clair. Ce module sert aux tests, aux outils de l'autorité et au contrôle qu
   de récupération possible.
 - La suppression des **dernières** entrées d'une chaîne n'est pas détectable sans ancrage externe (pas encore fait).
 
+## Limitation du débit
+
+Chaque adresse IP est limitée (fenêtre glissante, en mémoire) ; au-delà, le serveur répond `429` avec l'en-tête
+`Retry-After` (secondes à attendre). Le site gère ce cas : l'envoi du journal réessaie plus tard, et « Retrouver mon
+espace » affiche un message clair.
+
+| Groupe | Requêtes | Défaut | Variable |
+|---|---|---|---|
+| Inscription | `POST /api/patients` | 20 par heure | `LAFIA_DEBIT_INSCRIPTION` |
+| Lecture du journal | `GET /api/journal/patients/{id}` | 120 par minute | `LAFIA_DEBIT_LECTURE` |
+| Secrets refusés | réponses `401` sur la lecture du journal | 20 par 10 minutes | `LAFIA_DEBIT_ECHEC_JETON` |
+| Envoi du journal | `POST /api/journal/chaines/…/entrees` | 120 par minute | `LAFIA_DEBIT_ENVOI` |
+| Le reste de `/api` | registre, santé… | 300 par minute | `LAFIA_DEBIT_DEFAUT` |
+
+Format des variables : `nombre/secondes`, par exemple `LAFIA_DEBIT_ECHEC_JETON=20/600`. Une fois le seuil de secrets
+refusés atteint, même le bon secret est refusé jusqu'à la fin de la fenêtre : c'est ce qui rend les essais en masse
+inutiles. `LAFIA_DEBIT=0` désactive tout (développement seulement). Les limites sont larges pour qu'un centre de
+santé entier derrière une même adresse IP passe sans gêne. Limite assumée : un seul processus uvicorn (les compteurs
+sont en mémoire, propres à chaque processus).
+
+## Sauvegardes
+
+```bash
+.venv/bin/python -m lafia.sauvegarde creer     --db lafia.db --dossier sauvegardes --garder 14   # à chaud, vérifiée
+.venv/bin/python -m lafia.sauvegarde verifier  sauvegardes/lafia-20261027-030000.db
+.venv/bin/python -m lafia.sauvegarde restaurer sauvegardes/lafia-20261027-030000.db --db lafia.db  # service ARRÊTÉ
+```
+
+- **creer** copie la base pendant que le service tourne (API officielle de SQLite), en fait un fichier unique et
+  autonome, vérifie son intégrité, puis ne garde que les 14 plus récentes.
+- **restaurer** vérifie la copie avant de toucher à quoi que ce soit, et garde l'ancienne base à côté
+  (`lafia.db.avant-restauration`).
+- En production, le service `sauvegarde` de `compose.yaml` le fait **chaque jour** dans `./sauvegardes` sur l'hôte.
+  Copiez aussi ce dossier **ailleurs** régulièrement : une sauvegarde sur le même disque ne protège pas d'une panne
+  du disque.
+
 ## Production
 
 `compose.yaml` lance le conteneur `lafia-api` sur le réseau `edge` du serveur ; `frontend/deploy/lafia.caddy`
@@ -94,9 +130,10 @@ envoie `/api/*` vers lui. La base vit dans le volume `lafia-data` : **à sauvega
 
 ```bash
 mkdir -p registre && cp registre_signe.json registre/     # le registre en service, monté en lecture seule
+mkdir -p sauvegardes && sudo chown 1000:1000 sauvegardes   # le conteneur (utilisateur 1000) y écrit les sauvegardes
 docker compose up -d --build
 # révoquer en production : sur le poste de l'autorité, puis copier le fichier signé dans registre/ sur le serveur
 ```
 
-À faire avant une vraie mise en service : épingler l'image Python par son empreinte (digest), mettre en place la
-sauvegarde du volume, et limiter le débit des requêtes dans Caddy.
+Fait : limitation du débit, sauvegarde quotidienne vérifiée. À faire avant une vraie mise en service : épingler
+l'image Python par son empreinte (digest), et organiser la copie des sauvegardes hors du serveur.

@@ -10,6 +10,7 @@ Variables d'environnement :
     LAFIA_DB         fichier SQLite
     LAFIA_REGISTRE   registre signé (registre_signe.json) ; relu automatiquement s'il change (révocation sans redémarrage)
     LAFIA_AUTORITE   clé PUBLIQUE de l'autorité (autorite.pub.json) ; le serveur ne détient jamais la clé privée
+    LAFIA_DEBIT_*    limites de débit par adresse IP (voir lafia/debit.py) ; LAFIA_DEBIT=0 les désactive (développement)
 """
 from __future__ import annotations
 
@@ -23,6 +24,7 @@ from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
+from .debit import Limiteur, groupe_de, regles_depuis_env, secondes_entieres
 from .journal import RX_PATIENT, EntreeInvalide
 from .registre import RegistreInvalide, lire_pub, ouvrir
 from .store import Conflit, Store
@@ -89,14 +91,46 @@ class Envoi(BaseModel):
 RACINE = Path(__file__).resolve().parent.parent
 
 
-def creer_app(db: str | None = None, registre: str | None = None, autorite: str | None = None) -> FastAPI:
+_PAR_DEFAUT = object()
+
+
+def creer_app(db: str | None = None, registre: str | None = None, autorite: str | None = None,
+              limiteur: Limiteur | None | object = _PAR_DEFAUT) -> FastAPI:
     db = db or os.environ.get("LAFIA_DB", "lafia.db")
     chemin_registre = registre or os.environ.get("LAFIA_REGISTRE", str(RACINE / "registre_signe.json"))
     chemin_autorite = autorite or os.environ.get("LAFIA_AUTORITE", str(RACINE / "autorite.pub.json"))
     store = Store(db)
     reg = RegistreCourant(chemin_registre, lire_pub(chemin_autorite))
 
+    if limiteur is _PAR_DEFAUT:
+        limiteur = None if os.environ.get("LAFIA_DEBIT") == "0" else Limiteur(regles_depuis_env())
+    lim: Limiteur | None = limiteur  # type: ignore[assignment]
+
     app = FastAPI(title="Lafia", version="0.1.0", docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url=None)
+
+    def trop(attente: float, message: str) -> JSONResponse:
+        s = secondes_entieres(attente)
+        return JSONResponse(status_code=429, headers={"Retry-After": str(s)},
+                            content={"code": "TROP_DE_REQUETES", "message": message, "reessayer_dans_s": s})
+
+    @app.middleware("http")
+    async def _debit(request: Request, call_next):
+        groupe = groupe_de(request.method, request.url.path) if lim else None
+        if groupe is None:
+            return await call_next(request)
+        # Derrière Caddy, uvicorn (--proxy-headers) remplace l'adresse par celle du vrai client (X-Forwarded-For).
+        ip = request.client.host if request.client else "inconnue"
+        if groupe == "lecture":
+            attente = lim.attente("echec_jeton", ip)  # type: ignore[union-attr]
+            if attente:
+                return trop(attente, "Trop de secrets patients refusés depuis cette adresse. Réessayez plus tard.")
+        attente = lim.essayer(groupe, ip)  # type: ignore[union-attr]
+        if attente:
+            return trop(attente, "Trop de requêtes depuis cette adresse. Réessayez plus tard.")
+        reponse = await call_next(request)
+        if groupe == "lecture" and reponse.status_code == 401:
+            lim.noter("echec_jeton", ip)  # type: ignore[union-attr]
+        return reponse
 
     @app.exception_handler(EntreeInvalide)
     async def _invalide(_: Request, e: EntreeInvalide):

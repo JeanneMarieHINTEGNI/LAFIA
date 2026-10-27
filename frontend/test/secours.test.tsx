@@ -54,6 +54,8 @@ describe('Serveur : vérification du secret', () => {
     expect(await verifierJeton(ID, 'x'.repeat(43))).toBe('refuse')
     vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('hors ligne'))))
     expect(await verifierJeton(ID, JETON)).toBe('injoignable')
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 429, headers: { 'Retry-After': '600' } })))
+    expect(await verifierJeton(ID, JETON)).toBe('trop')
   })
 })
 
