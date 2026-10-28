@@ -33,7 +33,11 @@ frontend/
     ui/
       trust.ts  BadgeContext.tsx
       UrgenceView.tsx  ScanUrgence.tsx  ScanJournalise.tsx
-      BadgeLoader.tsx  ConsultationForm.tsx  QrCode.tsx
+      BadgeLoader.tsx  QrCode.tsx  formulaire.tsx (éléments de formulaire partagés)
+      ScannerQr.tsx  lecteurQr.ts   # caméra + lecture QR sur l'appareil (natif, sinon zxing-wasm)
+    soignant/                 # espace soignant (#/soignant), sur le téléphone DU soignant
+      EspaceSoignant.tsx      # badge, scan de la carte (lecture signée), mise à jour, QR de la nouvelle carte
+      EditeurCarte.tsx        # profil + consultation + relecture + signature ; émission journalisée AVANT remise
     patient/                  # espace patient
       carte.ts                # saisie → C0 (profil, consultations), signature, lien QR — testé
       CarteView.tsx           # « Ma carte » : badge soignant, relecture, signature, QR, test de lecture
@@ -113,7 +117,7 @@ Backend (`backend/`, Python/FastAPI/SQLite) : journal partagé fait et testé (v
 
 Registre signé (fait) : `src/ui/trust.ts` vérifie la signature de l'autorité, n'accepte qu'une version plus récente, garde la dernière pour le hors-ligne ; `sync.ts` la récupère sur `/api/registre`. Révocation = toutes les cartes de ce badge refusées.
 
-Fait aussi : écran « Qui lit ? » (motif de lecture sans badge, journalisé) ; changement de téléphone (code de secours + carte restaurée, `src/patient/secours.ts`, `Secours.tsx`).
+Fait aussi : espace soignant (#/soignant) et réception de la nouvelle carte par le patient (`patient/RecevoirCarte.tsx` : même identifiant, plus récente) ; lecteur public sans espace (#/lire) ; l'émission d'une carte est inscrite au journal (ECRITURE) avant remise. Écran « Qui lit ? » (motif de lecture sans badge, journalisé) ; changement de téléphone (code de secours + carte restaurée, `src/patient/secours.ts`, `Secours.tsx`).
 
 À faire : dossier complet sur serveur (phase P3, après décision D8 : les données d'urgence restent dans la carte, sans serveur) ; coffres C1/C2 ; chiffrement du journal ; bouton « + » ; décisions §6.
 

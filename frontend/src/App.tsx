@@ -10,6 +10,7 @@ import IA from './sections/IA'
 import Final from './sections/Final'
 import EspacePatient from './patient/EspacePatient'
 import { ScanJournalise } from './ui/ScanJournalise'
+import EspaceSoignant from './soignant/EspaceSoignant'
 import { Wordmark } from './Logo'
 import { useDeviceState } from './patient/store'
 import { Avatar, CLE_PHOTO } from './patient/Avatar'
@@ -59,6 +60,15 @@ function ReaderButton() {
   return (
     <a href="/#/lire" className="lg lg-button flex items-center gap-2 text-[#F4F1EA]/85 text-sm font-medium px-4 py-1.5 hover:text-white">
       Lire une carte
+    </a>
+  )
+}
+
+/** Espace soignant : mise à jour des cartes depuis le téléphone du soignant. */
+function SoignantButton() {
+  return (
+    <a href="/#/soignant" className="lg lg-button flex items-center gap-2 text-[#F4F1EA]/85 text-sm font-medium px-4 py-1.5 hover:text-white">
+      Soignant
     </a>
   )
 }
@@ -122,6 +132,7 @@ export default function App() {
   if (hash.startsWith('#L1:')) return <LecteurPage><AncienneCarte /></LecteurPage>
   // Lecteur public : un soignant ou un passant lit une carte SANS créer d'espace patient (QR texte « L2: » compris).
   if (hash.startsWith('#/lire')) return <LecteurPage><ScanJournalise /></LecteurPage>
+  if (hash.startsWith('#/soignant')) return <EspaceSoignant />
   if (hash.startsWith('#/espace')) return <EspacePatient tab={hash.split('/')[2] ?? ''} />
   return <Landing />
 }
@@ -134,6 +145,9 @@ function LecteurPage({ children }: { children: ReactNode }) {
         <a href="/" className="text-sm text-[#F4F1EA]/55 hover:text-[#F4F1EA]">Lafia</a>
         <h1 className="mb-6 mt-4 font-display text-4xl font-light">Lecture d’urgence</h1>
         {children}
+        <p className="mt-10 border-t border-white/10 pt-6 text-sm text-[#F4F1EA]/50">
+          Vous êtes soignant et voulez mettre à jour la carte ? <a href="/#/soignant" className="text-[#4FB3AC] underline underline-offset-4">Espace soignant</a>
+        </p>
       </div>
     </main>
   )
@@ -160,7 +174,7 @@ function Landing() {
             <Wordmark surFond="sombre" size={30} />
            </a>
 
-        <div className="lg lg-pill lg-distort hidden md:flex absolute left-1/2 -translate-x-1/2 px-1.5 py-1.5 items-center gap-0.5">
+        <div className="lg lg-pill lg-distort hidden 2xl:flex px-1.5 py-1.5 items-center gap-0.5">
           {NAV_ITEMS.map(item => (
             <a
               key={item.href}
@@ -174,14 +188,15 @@ function Landing() {
           ))}
         </div>
 
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden lg:flex lg:ml-auto 2xl:ml-0 items-center gap-2">
           <ReaderButton />
+          <SoignantButton />
           <AccountButton />
           <StartButton />
         </div>
 
         <button
-          className="md:hidden text-white p-2 relative w-8 h-8 flex items-center justify-center"
+          className="2xl:hidden ml-3 text-white p-2 relative w-8 h-8 flex items-center justify-center"
           aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen(o => !o)}
@@ -196,12 +211,12 @@ function Landing() {
       </nav>
 
       <div
-        className={`fixed inset-0 z-[54] bg-black/60 backdrop-blur-sm md:hidden transition-opacity duration-300 ${menuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 z-[54] bg-black/60 backdrop-blur-sm 2xl:hidden transition-opacity duration-300 ${menuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={() => setMenuOpen(false)}
       />
 
       <div
-        className={`fixed top-0 left-0 right-0 z-[55] bg-[#0A1615]/[0.98] backdrop-blur-xl pt-20 pb-8 px-6 border-b border-white/10 flex flex-col gap-0 md:hidden transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top ${
+        className={`fixed top-0 left-0 right-0 z-[55] bg-[#0A1615]/[0.98] backdrop-blur-xl pt-20 pb-8 px-6 border-b border-white/10 flex flex-col gap-0 2xl:hidden transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] origin-top ${
           menuOpen ? 'translate-y-0 opacity-100 scale-y-100' : '-translate-y-4 opacity-0 scale-y-95 pointer-events-none'
         }`}
       >
@@ -216,8 +231,9 @@ function Landing() {
             {item.label}
           </a>
         ))}
-        <div className="flex items-center gap-2 pt-6 transition-all duration-300" style={{ transitionDelay: menuOpen ? '300ms' : '0ms' }}>
+        <div className="flex flex-wrap items-center gap-2 pt-6 transition-all duration-300" style={{ transitionDelay: menuOpen ? '300ms' : '0ms' }}>
           <ReaderButton />
+          <SoignantButton />
           <AccountButton />
           <StartButton />
         </div>

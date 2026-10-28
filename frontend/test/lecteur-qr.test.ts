@@ -74,3 +74,13 @@ describe('Règles autour du lecteur', () => {
     expect(messageCamera(new Error('x'))).toMatch(/texte collé/)
   })
 })
+
+describe('Caméra : reconnaître une image noire', () => {
+  it('noir ≈ 0, blanc = 255, une pièce sombre réelle reste au-dessus du seuil', async () => {
+    const { luminositeMoyenne } = await import('../src/ui/ScannerQr')
+    const img = (v: number) => { const d = new Uint8ClampedArray(640 * 480 * 4).fill(v); for (let i = 3; i < d.length; i += 4) d[i] = 255; return d }
+    expect(luminositeMoyenne(img(0))).toBeLessThan(1)
+    expect(luminositeMoyenne(img(255))).toBeGreaterThan(250)
+    expect(luminositeMoyenne(img(25))).toBeGreaterThan(6)      // pénombre : pas confondue avec un volet fermé
+  })
+})
