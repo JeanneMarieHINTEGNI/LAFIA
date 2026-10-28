@@ -1,5 +1,6 @@
 import { useEffect, useRef, type RefObject } from 'react'
-import { ArrowRightIcon, CaretDownIcon, PlayIcon } from '@phosphor-icons/react'
+import { ArrowRightIcon, CaretDownIcon } from '@phosphor-icons/react'
+import { BoutonVideoDemo } from './ui/VideoDemo'
 import { Greenery } from './Scene'
 
 const DIVE_DISTANCE = 2800
@@ -133,13 +134,7 @@ export default function Intro() {
                 <a href="#compartiments" className="bg-[#F4F1EA] text-[#0A1615] text-sm font-medium px-6 sm:px-7 py-3 sm:py-3.5 rounded-full hover:bg-white transition-all">
                   Voir le principe
                 </a>
-                <a
-                  href="#urgence"
-                  className="lg lg-button flex items-center gap-2.5 text-[#F4F1EA]/90 text-sm font-medium px-6 sm:px-7 py-3 sm:py-3.5"
-                >
-                  <PlayIcon size={14} weight="fill" />
-                  Voir la démo
-                </a>
+                <BoutonVideoDemo className="lg lg-button flex items-center gap-2.5 text-[#F4F1EA]/90 text-sm font-medium px-6 sm:px-7 py-3 sm:py-3.5" />
               </div>
             </div>
             <div className="md:col-span-5 lg:col-span-4 anim-stagger" style={{ animationDelay: '0.85s' }}>
@@ -170,7 +165,7 @@ export default function Intro() {
               qui a écrit la carte. Le reste du dossier sera chiffré, et chaque ouverture vous sera notifiée.
             </p>
             <div className="flex flex-wrap items-center gap-3">
-              <a href="#final" className="bg-[#F4F1EA] text-[#0A1615] text-sm font-medium px-5 sm:px-6 py-2.5 sm:py-3 rounded-full hover:bg-white transition-all">
+              <a href="#contact" className="bg-[#F4F1EA] text-[#0A1615] text-sm font-medium px-5 sm:px-6 py-2.5 sm:py-3 rounded-full hover:bg-white transition-all">
                 Rejoindre le pilote
               </a>
               <a

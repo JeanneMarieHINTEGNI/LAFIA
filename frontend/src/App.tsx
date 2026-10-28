@@ -75,7 +75,7 @@ function SoignantButton() {
 
 function StartButton() {
   return (
-    <a href="#final" className="bg-[#F2A93B] text-[#0A1615] text-sm font-medium px-5 py-2 rounded-full hover:bg-[#f5b85a] transition-colors">
+    <a href="#contact" className="bg-[#F2A93B] text-[#0A1615] text-sm font-medium px-5 py-2 rounded-full hover:bg-[#f5b85a] transition-colors">
       Demander une démo
     </a>
   )

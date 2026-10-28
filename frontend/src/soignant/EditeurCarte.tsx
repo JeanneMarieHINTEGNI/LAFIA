@@ -109,7 +109,7 @@ export function EditeurCarte({ profil, onProfil, consultations, patientId, onSig
         </fieldset>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="text-sm text-[#F4F1EA]/65">Contact d’urgence<input maxLength={30} value={profil.ecNom} onChange={e => p({ ecNom: e.target.value })} placeholder="Nom" className={champ} /></label>
-          <label className="text-sm text-[#F4F1EA]/65">Téléphone<input inputMode="tel" maxLength={18} value={profil.ecTel} onChange={e => p({ ecTel: e.target.value })} placeholder="+229 …" className={champ} /></label>
+          <label className="text-sm text-[#F4F1EA]/65">Téléphone<input inputMode="tel" maxLength={19} value={profil.ecTel} onChange={e => p({ ecTel: e.target.value })} placeholder="+229 …" className={champ} /></label>
         </div>
       </section>
 
