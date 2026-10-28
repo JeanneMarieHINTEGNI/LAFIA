@@ -1,5 +1,7 @@
 import type { Verified, Consultation } from '../core'
 import { ALERTES, ALLERGENS, ANTECEDENTS, MEDS, MOTIFS, ORIENT, ROLE_LABEL, label } from './labels'
+import { Ecouter } from './Ecouter'
+import { texteCarte } from './voix'
 
 type Ok = Extract<Verified, { ok: true }>
 const fmt = (t: number) => new Date(t * 1000).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -24,6 +26,7 @@ export function UrgenceView({ card, facilities, now = Math.floor(Date.now() / 10
       <div className="rounded-xl border border-[#4FB3AC]/40 bg-[#4FB3AC]/10 px-4 py-3 text-sm text-[#C8F3EE]">
         ✓ Signature valide · écrit par {ROLE_LABEL[role].toLowerCase()}{card.etab ? ` du ${where(card.etab)}` : ''} · émise le {fmt(card.iat)}
       </div>
+      <Ecouter phrases={texteCarte(card, facilities, { now })} libelle="Écouter la carte" />
       {card.warnings.map(w => <div key={w} className="rounded-xl border border-[#F2A93B]/40 bg-[#F2A93B]/10 px-4 py-3 text-sm text-[#F2A93B]">⚠ {w}</div>)}
 
       {/* 0. Identité clinique : lisible d'un coup d'œil. */}

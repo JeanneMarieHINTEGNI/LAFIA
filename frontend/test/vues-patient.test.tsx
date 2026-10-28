@@ -49,14 +49,13 @@ describe('« Mes compartiments » : la vraie carte, rien d’inventé', () => {
   })
 })
 
-describe('« Aidant et rappels »', () => {
+describe('« Rappels et aidant »', () => {
   it('l’aidant est le contact d’urgence de la carte, appelable', () => {
     poserCarte({ ec: { n: 'Awa Dossou', tel: '+229 97 00 00 41' }, tx: [{ c: 'INSUL' }] })
     render(<AidantView />)
     expect(screen.getByText(/Awa Dossou/)).toBeTruthy()
     expect(screen.getByRole('link', { name: '+229 97 00 00 41' }).getAttribute('href')).toBe('tel:+22997000041')
-    expect(screen.getByText('Bientôt')).toBeTruthy()
-    expect(screen.getByText(/Ils concerneront les traitements de votre carte : Insuline/)).toBeTruthy()
+    expect(screen.getByText(/Aucun rappel pour l’instant/)).toBeTruthy()          // rien d'inventé : aucun rappel tant qu'on n'en crée pas
     expect(document.body.textContent).not.toMatch(FICTIF)
   })
 

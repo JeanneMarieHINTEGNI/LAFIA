@@ -40,8 +40,8 @@ export default function Final() {
           <p className="font-display text-lg text-[#F4F1EA] mb-2">lafia</p>
           <p className="text-[#F4F1EA]/45 max-w-sm">L'essentiel de votre santé est sur vous, pas seulement dans un serveur.</p>
         </div>
-        <p className="text-[#F4F1EA]/35">Export FHIR IPS prévu · Projet en développement</p>
-        <p className="text-[#F4F1EA]/35">Hackathon 2026 · Bénin · Togo</p>
+        <p className="text-[#F4F1EA]/35">Export FHIR IPS · Projet en développement</p>
+        <p className="text-[#F4F1EA]/35">Dossier fictif · Bénin · Togo</p>
       </footer>
     </section>
   )

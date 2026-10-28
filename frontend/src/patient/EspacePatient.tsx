@@ -16,7 +16,7 @@ const TABS = [
   { id: 'carte', short: 'Carte', label: 'Ma carte', icon: QrCodeIcon, title: 'Votre carte.', sub: "Ce qu'un soignant lit en urgence, sans réseau.", View: CarteView },
   { id: 'lecture', short: 'Urgence', label: 'Lecture d’urgence', icon: QrCodeIcon, title: 'Lecture d’urgence.', sub: 'Ouvrir un lien QR ou coller le contenu d’une carte signée.', View: ScanJournalise },
   { id: 'compartiments', short: 'Compartiments', label: 'Mes compartiments', icon: FoldersIcon, title: 'Ce que vous montrez.', sub: 'Ce que votre carte montre en urgence, et ce qui viendra ensuite.', View: CompartimentsView },
-  { id: 'aidant', short: 'Aidant', label: 'Aidant et rappels', icon: HandHeartIcon, title: 'Votre aidant et vos rappels.', sub: 'La personne qu’un soignant peut appeler en urgence. Les rappels arrivent bientôt.', View: AidantView },
+  { id: 'aidant', short: 'Rappels', label: 'Rappels et aidant', icon: HandHeartIcon, title: 'Vos rappels et votre aidant.', sub: 'Vos prises du jour, et la personne qu’un soignant peut appeler en urgence.', View: AidantView },
 ] as const
 
 // Where each piece of the record actually lives: answers "what does this space manage if nothing is on the server?".

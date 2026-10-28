@@ -4,6 +4,10 @@ import { ALLERGENS, ANTECEDENTS, MEDS, MOTIFS, label } from '../ui/labels'
 import { FACILITIES, REGISTRY, getRoleLabel } from '../ui/trust'
 import { useDeviceState } from './store'
 import { PROFIL_VIDE, type ProfilSaisi } from './carte'
+import { Ecouter } from '../ui/Ecouter'
+import { RappelsView } from './Rappels'
+import { ExporterIps } from '../ui/ExporterIps'
+import { texteCarte } from '../ui/voix'
 
 // Onglets « Mes compartiments » et « Aidant et rappels » : uniquement des données RÉELLES (la carte signée de ce
 // téléphone). Ce qui n'est pas encore construit est annoncé comme tel ; aucune donnée d'exemple n'est affichée.
@@ -72,6 +76,7 @@ const COMPARTIMENTS = [
 export function CompartimentsView() {
   useNettoyageDonneesExemple()
   const carte = useCarteVerifiee()
+  const [compte] = useDeviceState<{ fullName?: string }>('patient-profile', {})
   if (!carte) return <PasDeCarte />
   const lignes = lignesDeLaCarte(carte.payload.pr)
   const signataire = `${getRoleLabel(carte.role)}${carte.etab ? `, ${FACILITIES[carte.etab] ?? carte.etab}` : ''}`
@@ -85,6 +90,7 @@ export function CompartimentsView() {
             <h3 className="font-display text-2xl font-light text-[#F4F1EA]">Votre carte</h3>
             <p className="mt-1 max-w-lg text-[15px] text-[#F4F1EA]/50">Signée, lisible par toute personne qui tient la carte, même sans réseau. Voici exactement ce qu’elle contient.</p>
             <p className="mt-2 text-xs text-[#F4F1EA]/40">Signée par : {signataire} · le {date(carte.iat)}</p>
+            <Ecouter className="mt-4" phrases={texteCarte(carte, FACILITIES, { pourLePatient: true })} libelle="Écouter ma carte" />
           </div>
         </div>
         <ul>
@@ -103,6 +109,7 @@ export function CompartimentsView() {
           )}
           {lignes.length === 0 && consultations.length === 0 && <li className="py-5 text-sm text-[#F4F1EA]/40">La carte ne contient encore aucune information renseignée.</li>}
         </ul>
+        <div className="mt-6 border-t border-white/10 pt-5"><ExporterIps carte={carte} nomParDefaut={compte.fullName ?? ''} /></div>
         <p className="mt-4 text-sm text-[#F4F1EA]/45">
           Pour changer ce que la carte montre (y compris retirer une information sensible), il faut une nouvelle carte, relue et signée par un soignant. <a href="/#/espace/carte" className={lienCarte}>Aller à « Ma carte »</a>
         </p>
@@ -124,7 +131,7 @@ export function CompartimentsView() {
   )
 }
 
-/* ---------- Aidant et rappels ---------- */
+/* ---------- Rappels et aidant ---------- */
 
 export function AidantView() {
   useNettoyageDonneesExemple()
@@ -133,10 +140,10 @@ export function AidantView() {
   const ecCarte = carte?.payload.pr?.ec
   const ecSaisi = profilStocke.ecNom?.trim() && profilStocke.ecTel?.trim() ? { n: profilStocke.ecNom.trim(), tel: profilStocke.ecTel.trim() } : undefined
   const modifieNonSigne = Boolean(ecSaisi && (!ecCarte || ecSaisi.n !== ecCarte.n || ecSaisi.tel !== ecCarte.tel))
-  const traitements = carte?.payload.pr?.tx ?? []
 
   return (
     <div className="max-w-2xl">
+      <div className="mb-14"><RappelsView /></div>
       <section className="mb-14 border-t border-white/10 pt-6">
         <h3 className="font-display text-2xl font-light text-[#F4F1EA]">Votre aidant</h3>
         <p className="mt-1 text-[15px] text-[#F4F1EA]/50">C’est le contact d’urgence de votre carte : un soignant peut l’appeler, même sans réseau internet.</p>
@@ -156,16 +163,6 @@ export function AidantView() {
         <p className="mt-4 text-sm text-[#F4F1EA]/45">Pour le changer : <a href="/#/espace/carte" className={lienCarte}>« Ma carte »</a>, puis signature par un soignant.</p>
       </section>
 
-      <section className="border-t border-white/10 pt-6">
-        <h3 className="font-display text-2xl font-light text-[#F4F1EA]">Vos rappels</h3>
-        <p className="mb-2 mt-1 text-[15px] text-[#F4F1EA]/50">Par SMS, sans smartphone. Le message ne nommera jamais la maladie ni le médicament.</p>
-        <Bientot>Les rappels ne sont pas encore construits : aucun SMS n’est envoyé pour l’instant.</Bientot>
-        {traitements.length > 0 && (
-          <p className="text-sm text-[#F4F1EA]/45">
-            Ils concerneront les traitements de votre carte : {traitements.map(t => label(MEDS, t.c)).join(', ')}.
-          </p>
-        )}
-      </section>
     </div>
   )
 }

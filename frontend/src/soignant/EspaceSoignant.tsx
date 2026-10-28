@@ -12,6 +12,7 @@ import { baseParDefaut, texteQr, type ProfilSaisi } from '../patient/carte'
 import { carteEnTexte, profilDepuisCarte } from '../patient/secours'
 import { EditeurCarte } from './EditeurCarte'
 import { ImprimerCarte } from '../ui/ImprimerCarte'
+import { ExporterIps } from '../ui/ExporterIps'
 
 type Ok = Extract<Verified, { ok: true }>
 
@@ -105,6 +106,7 @@ export default function EspaceSoignant() {
                 <button type="button" onClick={patientSuivant} className="text-sm text-[#F4F1EA]/55 hover:text-[#F4F1EA]">Autre patient</button>
               </div>
               <UrgenceView card={carteLue} facilities={FACILITIES} />
+              <div className="mt-5 border-t border-white/10 pt-5"><ExporterIps carte={carteLue} /></div>
             </section>
             <section className="lg lg-panel space-y-4 p-5">
               <h2 className="font-display text-2xl font-light">2. Mettre à jour</h2>

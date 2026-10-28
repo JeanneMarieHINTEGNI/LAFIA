@@ -5,7 +5,7 @@
  * donc +229 01 40 54 26 21 → wa.me/2290140542621.
  */
 export const CONTACT = {
-  email: 'hintegnijeannemari@gmail.com',
+  email: 'hintegnijeannemarie@gmail.com',
   whatsapp: '2290140542621',
   whatsappAffiche: '+229 01 40 54 26 21',
 } as const

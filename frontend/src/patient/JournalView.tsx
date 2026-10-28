@@ -5,6 +5,8 @@ import { journalDuServeur } from '../journal/sync'
 import { FACILITIES, REGISTRY, getRoleLabel } from '../ui/trust'
 import { MOTIF_LECTURE } from '../ui/labels'
 import { useDeviceState } from './store'
+import { Ecouter } from '../ui/Ecouter'
+import { texteJournal, type LigneJournalDite } from '../ui/voix'
 
 // « Mon journal » : les VRAIS accès à la carte du patient, vérifiés avant affichage.
 // - lectures faites sur CET appareil : journal local, chaîne entière vérifiée ici ;
@@ -87,6 +89,17 @@ export function JournalView() {
     return [...locales, ...autres].sort((a, b) => b.e.t - a.e.t)
   }, [entrees, distant])
 
+  // Le même journal, dit à voix haute (mêmes vérifications que l'affichage : une ligne invalide est dite comme telle).
+  const phrases = useMemo(() => texteJournal(lignes.map(({ e, origine, statut }): LigneJournalDite => {
+    const invalide = statut === 'invalide' || (origine === 'appareil' && rupture !== -1 && e.i >= rupture)
+    const badge = e.acteur ? REGISTRY[e.acteur] : undefined
+    return {
+      t: e.t, action: e.action, motif: e.motif, lieu: e.etab ? FACILITIES[e.etab] : undefined,
+      qui: invalide ? 'invalide' : !e.acteur ? 'sans_badge' : !badge || badge.revoked ? 'inconnu' : 'badge',
+      role: badge?.role,
+    }
+  })), [lignes, rupture])
+
   if (erreur) {
     return <p role="alert" className="text-[#F2A93B]">Le journal de cet appareil est illisible (stockage indisponible ou bloqué). Aucun accès ne peut être affiché.</p>
   }
@@ -114,6 +127,8 @@ export function JournalView() {
           )}
         </div>
       )}
+
+      {carte && <Ecouter className="mb-6" phrases={phrases} libelle="Écouter mon journal" />}
 
       {serveur === 'injoignable' && (
         <p className="mb-4 text-sm text-[#F2A93B]">Serveur injoignable : seules les lectures faites sur cet appareil sont affichées. Les autres apparaîtront au retour du réseau.</p>
