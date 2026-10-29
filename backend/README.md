@@ -137,3 +137,45 @@ docker compose up -d --build
 
 Fait : limitation du débit, sauvegarde quotidienne vérifiée. À faire avant une vraie mise en service : épingler
 l'image Python par son empreinte (digest), et organiser la copie des sauvegardes hors du serveur.
+
+## Hébergement gratuit (pilote) : Vercel + Turso
+
+En attendant un serveur à nous, le backend tourne comme **fonction Python sur Vercel** (gratuit), avec la base sur
+**Turso** (SQLite hébergée, offre gratuite sans carte bancaire : vérifier les conditions sur turso.tech/pricing).
+Le même code sert aussi le fichier SQLite derrière Caddy : seul `LAFIA_DB` change. La lecture d'urgence, elle,
+ne passe jamais par ce serveur.
+
+**1. La base (Turso)** — turso.tech → se connecter avec GitHub → *Create Database* `lafia`, région la plus proche de
+Vercel (ex. Europe de l'Ouest). Noter l'adresse `libsql://lafia-<compte>.turso.io` et créer un jeton (*Create Token*,
+lecture-écriture). Les tables sont créées au premier démarrage.
+
+**2. L'API (2e projet Vercel)** — vercel.com → *Add New… → Project* → même dépôt `LAFIA`, nommé **`lafia-api`**,
+*Root Directory* = `backend` (Vercel reconnaît FastAPI grâce à `index.py`). Variables d'environnement :
+
+| Variable | Valeur |
+|---|---|
+| `LAFIA_DB` | `libsql://lafia-<compte>.turso.io` |
+| `LAFIA_DB_JETON` | le jeton Turso (secret) |
+| `LAFIA_ORIGINES` | `https://lafia-1nkp.vercel.app` |
+
+Vérifier : `https://lafia-api.vercel.app/api/sante` répond `{"ok":true,…}`.
+
+**3. Le site** — dans le projet Vercel du site : variable `VITE_API_URL` = `https://lafia-api.vercel.app`, puis
+redéployer. Si Vercel a donné une autre adresse à l'API, la mettre aussi dans `connect-src` de `frontend/vercel.json`
+(la CSP n'autorise que cette adresse).
+
+Ce qui change par rapport au serveur à nous, et limites assumées pour un pilote :
+- **Appels d'une adresse à l'autre (CORS)** : seul le site listé dans `LAFIA_ORIGINES` peut lire les réponses.
+- **Adresse du client** pour la limitation du débit : lue dans `x-forwarded-for`, que Vercel réécrit (choisi
+  automatiquement quand `VERCEL` est défini). Les compteurs vivent dans chaque instance de la fonction : la limite est
+  moins stricte qu'avec un seul serveur. Les secrets patients restent hors d'atteinte (32 octets aléatoires).
+- **Base injoignable** : l'API répond 503 ; le téléphone garde ses lectures et les renvoie plus tard.
+- **Sauvegardes** : celles de Turso (selon l'offre), plus une copie à la main de temps en temps ; le service
+  `sauvegarde` de `compose.yaml` ne concerne que le fichier SQLite.
+- **Révocation d'un badge** : le registre signé est dans le déploiement ; pousser le nouveau `registre_signe.json`
+  redéploie l'API.
+- **Données** : le serveur ne garde toujours aucune donnée médicale (voir plus haut), mais quel badge a lu quelle carte,
+  quand et où, est alors stocké chez Turso, hors du Bénin et du Togo. À trancher avant un vrai déploiement (décision D8).
+
+`demarrer.sh` (port `PORT`, abandon de root après avoir donné le volume à l'utilisateur 1000) sert si l'on passe
+plus tard sur un hébergeur à conteneur (Railway, Fly.io, un VPS).

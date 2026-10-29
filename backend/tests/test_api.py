@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from lafia.api import creer_app
+from faux_turso import FauxTurso
 from lafia.registre import cle_demo, signer
 
 V = json.loads((Path(__file__).parent / "vecteurs_journal.json").read_text(encoding="utf-8"))
@@ -15,13 +16,20 @@ CHAINE = "c-" + "a1" * 8
 PATIENT = "p-0123456789abcdef"
 
 
-@pytest.fixture
-def client(tmp_path):
+@pytest.fixture(params=["sqlite", "turso"])
+def client(request, tmp_path, monkeypatch):
+    """Chaque test de l'API tourne deux fois : base en fichier SQLite, et base Turso (faux serveur HTTP local)."""
     reg = tmp_path / "registre_signe.json"
     reg.write_text(json.dumps(signer(V["registre"], 1, cle_demo())), encoding="utf-8")
     pub = tmp_path / "autorite.pub.json"
     pub.write_text(json.dumps({"pub": cle_demo().verify_key.encode().hex()}), encoding="utf-8")
-    return TestClient(creer_app(db=str(tmp_path / "t.db"), registre=str(reg), autorite=str(pub)))
+    if request.param == "sqlite":
+        yield TestClient(creer_app(db=str(tmp_path / "t.db"), registre=str(reg), autorite=str(pub)))
+        return
+    faux = FauxTurso(str(tmp_path / "turso.db"))
+    monkeypatch.setenv("LAFIA_DB_JETON", faux.jeton)
+    yield TestClient(creer_app(db=faux.url, registre=str(reg), autorite=str(pub)))
+    faux.arreter()
 
 
 def jeton():

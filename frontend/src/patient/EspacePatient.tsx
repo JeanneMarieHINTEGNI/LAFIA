@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeftIcon, ClockCounterClockwiseIcon, FoldersIcon, HandHeartIcon, QrCodeIcon } from '@phosphor-icons/react'
+import { ArrowLeftIcon, ClockCounterClockwiseIcon, FoldersIcon, PillIcon, QrCodeIcon, SirenIcon } from '@phosphor-icons/react'
 import { PATIENT } from './data'
 import { AidantView, CompartimentsView } from './views'
 import { JournalView } from './JournalView'
@@ -10,13 +10,16 @@ import { nouvelIdPatient } from './carte'
 import { enregistrerPatient } from '../journal/sync'
 import { ScanJournalise } from '../ui/ScanJournalise'
 import { RestaurerEspace, SauvegardeSecours, type Restauration } from './Secours'
+import { GuideVocal, useAideVocale } from './GuideVocal'
+import { GUIDE_BIENVENUE, GUIDE_CREATION } from './guides'
+import { Ecouter } from '../ui/Ecouter'
 
 const TABS = [
   { id: 'journal', short: 'Journal', label: 'Mon journal', icon: ClockCounterClockwiseIcon, title: 'Qui a ouvert votre dossier.', sub: 'Chaque lecture de votre carte : quand, où, par qui. Vérifié sur cet appareil.', View: JournalView },
   { id: 'carte', short: 'Carte', label: 'Ma carte', icon: QrCodeIcon, title: 'Votre carte.', sub: "Ce qu'un soignant lit en urgence, sans réseau.", View: CarteView },
-  { id: 'lecture', short: 'Urgence', label: 'Lecture d’urgence', icon: QrCodeIcon, title: 'Lecture d’urgence.', sub: 'Ouvrir un lien QR ou coller le contenu d’une carte signée.', View: ScanJournalise },
+  { id: 'lecture', short: 'Urgence', label: 'Lecture d’urgence', icon: SirenIcon, title: 'Lecture d’urgence.', sub: 'Ouvrir un lien QR ou coller le contenu d’une carte signée.', View: ScanJournalise },
   { id: 'compartiments', short: 'Compartiments', label: 'Mes compartiments', icon: FoldersIcon, title: 'Ce que vous montrez.', sub: 'Ce que votre carte montre en urgence, et ce qui viendra ensuite.', View: CompartimentsView },
-  { id: 'aidant', short: 'Rappels', label: 'Rappels et aidant', icon: HandHeartIcon, title: 'Vos rappels et votre aidant.', sub: 'Vos prises du jour, et la personne qu’un soignant peut appeler en urgence.', View: AidantView },
+  { id: 'aidant', short: 'Rappels', label: 'Rappels et aidant', icon: PillIcon, title: 'Vos rappels et votre aidant.', sub: 'Vos prises du jour, et la personne qu’un soignant peut appeler en urgence.', View: AidantView },
 ] as const
 
 // Where each piece of the record actually lives: answers "what does this space manage if nothing is on the server?".
@@ -95,6 +98,7 @@ export default function EspacePatient({ tab }: { tab: string }) {
   const [mode, setMode] = useState<'choix' | 'creer' | 'retrouver'>('choix')
   const current = TABS.find(t => t.id === tab) ?? TABS[0]
   const ready = hasCompleteProfile(profile)
+  const [aideVocale] = useAideVocale()
 
   useEffect(() => {
     setDraft(profile)
@@ -143,6 +147,7 @@ export default function EspacePatient({ tab }: { tab: string }) {
         <div className="mx-auto max-w-2xl rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-sm">
           <p className="text-xs uppercase tracking-[0.18em] text-[#F4F1EA]/45">Espace patient</p>
           <h1 className="mt-4 font-display text-4xl font-light">Votre espace</h1>
+          {mode !== 'retrouver' && <Ecouter className="mt-5" phrases={mode === 'creer' ? GUIDE_CREATION : GUIDE_BIENVENUE} libelle="Écouter les explications" />}
 
           {mode === 'choix' && (
             <>
@@ -293,6 +298,7 @@ export default function EspacePatient({ tab }: { tab: string }) {
             </div>
           </div>
           {editPhoto && <div className="md:hidden mb-10"><ChoixPhoto photo={photo} nom={profile.fullName} onChange={p => { setPhoto(p); setEditPhoto(false) }} taille={56} /></div>}
+          <GuideVocal onglet={current.id} prenom={profile.firstName} />
           <h1 className="font-display font-light leading-[0.98] tracking-[-0.03em] text-[clamp(2.2rem,4.4vw,4rem)] text-[#F4F1EA]">{current.title}</h1>
           <p className="text-[15px] sm:text-base text-[#F4F1EA]/55 mt-4 mb-12 max-w-xl">{current.sub}</p>
           <current.View />
@@ -310,9 +316,10 @@ export default function EspacePatient({ tab }: { tab: string }) {
           <a
             key={t.id}
             href={`/#/espace/${t.id}`}
-            className={`flex flex-col items-center gap-1 py-3 text-[11px] ${t.id === current.id ? 'text-[#F4F1EA]' : 'text-[#F4F1EA]/45'}`}
+            aria-current={t.id === current.id ? 'page' : undefined}
+            className={`flex flex-col items-center gap-1 ${aideVocale ? 'py-4 text-[13px]' : 'py-3 text-[11px]'} ${t.id === current.id ? 'text-[#F4F1EA]' : 'text-[#F4F1EA]/45'}`}
           >
-            <t.icon size={21} weight={t.id === current.id ? 'duotone' : 'light'} />
+            <t.icon size={aideVocale ? 30 : 21} weight={t.id === current.id ? 'fill' : aideVocale ? 'regular' : 'light'} />
             {t.short}
           </a>
         ))}

@@ -1,4 +1,4 @@
-"""Stockage SQLite du journal partagé (un seul fichier, aucune installation de serveur de base de données).
+"""Stockage du journal partagé : fichier SQLite (serveur à nous) ou Turso, la même base SQLite hébergée (voir base.py).
 
 Ce que le serveur conserve : des entrées de journal déjà signées par les appareils, et l'empreinte du jeton de
 chaque patient. Il ne conserve AUCUNE donnée médicale : ni carte, ni allergie, ni traitement.
@@ -9,12 +9,13 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import os
 import re
-import sqlite3
 import time
 from pathlib import Path
-from typing import Iterable, Mapping
+from typing import Any, Iterable, Mapping
 
+from .base import ErreurBase, est_distante, ouvrir
 from .journal import ZERO, Entree, EntreeInvalide, verifier_entree
 
 SCHEMA = """
@@ -50,7 +51,7 @@ def empreinte(jeton: str) -> str:
     return hashlib.sha256(jeton.encode("utf-8")).hexdigest()
 
 
-def _ligne_vers_entree(r: sqlite3.Row) -> Entree:
+def _ligne_vers_entree(r: Mapping[str, Any]) -> Entree:
     return Entree(i=r["i"], t=r["t"], action=r["action"], cible=r["cible"], rubriques=tuple(json.loads(r["rubriques"])),
                   prev=r["prev"], hash=r["hash"], etab=r["etab"], acteur=r["acteur"], sig=r["sig"], motif=r["motif"])
 
@@ -60,21 +61,25 @@ class Conflit(Exception):
 
 
 class Store:
-    def __init__(self, chemin: str | Path):
+    def __init__(self, chemin: str | Path, jeton: str | None = None):
+        """`chemin` : fichier SQLite, ou adresse Turso (libsql://… / https://…) avec son jeton d'accès."""
         self.chemin = str(chemin)
-        with self._cx() as cx:
-            cx.executescript(SCHEMA)
+        self.jeton = jeton or os.environ.get("LAFIA_DB_JETON") or os.environ.get("TURSO_AUTH_TOKEN")
+        self.distante = est_distante(self.chemin)
+        cx = self._cx()
+        try:
+            for instruction in (i.strip() for i in SCHEMA.split(";")):
+                if instruction:
+                    cx.executer(instruction)
             # Migration d'une base créée avant l'ajout du motif : la colonne est ajoutée, les données restent.
-            colonnes = {r["name"] for r in cx.execute("PRAGMA table_info(entrees)")}
+            colonnes = {r["name"] for r in cx.executer("PRAGMA table_info(entrees)")}
             if "motif" not in colonnes:
-                cx.execute("ALTER TABLE entrees ADD COLUMN motif TEXT")
+                cx.executer("ALTER TABLE entrees ADD COLUMN motif TEXT")
+        finally:
+            cx.fermer()
 
-    def _cx(self) -> sqlite3.Connection:
-        cx = sqlite3.connect(self.chemin, timeout=10, isolation_level=None)
-        cx.row_factory = sqlite3.Row
-        cx.execute("PRAGMA journal_mode=WAL")
-        cx.execute("PRAGMA foreign_keys=ON")
-        return cx
+    def _cx(self):
+        return ouvrir(self.chemin, self.jeton)
 
     # ---------- journal ----------
     def ajouter(self, chaine: str, brutes: Iterable[Mapping], registre: Mapping[str, Mapping], maintenant: int | None = None) -> dict:
@@ -86,39 +91,52 @@ class Store:
         if not RX_CHAINE.fullmatch(chaine):
             raise EntreeInvalide("FORME", "identifiant de chaîne invalide")
         maintenant = maintenant or int(time.time())
-        entrees = [Entree.depuis_dict(b) for b in brutes]
+        entrees = sorted((Entree.depuis_dict(b) for b in brutes), key=lambda x: x.i)
         cx = self._cx()
         try:
-            cx.execute("BEGIN IMMEDIATE")
-            dernier = cx.execute("SELECT i, hash FROM entrees WHERE chaine=? ORDER BY i DESC LIMIT 1", (chaine,)).fetchone()
-            suivant, prev = (dernier["i"] + 1, dernier["hash"]) if dernier else (0, ZERO)
-            deja = acceptees = 0
-            for e in sorted(entrees, key=lambda x: x.i):
+            cx.commencer()
+            # Peu d'allers-retours (la base peut être distante) : dernier rang, entrées déjà reçues de la plage, puis
+            # toutes les insertions d'un coup. La vérification des signatures se fait ici, en Python.
+            dernier = cx.executer("SELECT i, hash FROM entrees WHERE chaine=? ORDER BY i DESC LIMIT 1", (chaine,))
+            suivant, prev = (dernier[0]["i"] + 1, dernier[0]["hash"]) if dernier else (0, ZERO)
+            connues = {}
+            if entrees and entrees[0].i < suivant:
+                connues = {r["i"]: r for r in cx.executer("SELECT * FROM entrees WHERE chaine=? AND i>=? AND i<?",
+                                                          (chaine, entrees[0].i, suivant))}
+            deja = 0
+            insertions = []
+            for e in entrees:
                 if e.i < suivant:
                     # Déjà reçue : acceptée comme simple renvoi seulement si TOUT est identique (pas seulement l'empreinte).
-                    connu = cx.execute("SELECT * FROM entrees WHERE chaine=? AND i=?", (chaine, e.i)).fetchone()
+                    connu = connues.get(e.i)
                     if connu and _ligne_vers_entree(connu) == e:
                         deja += 1
                         continue
                     raise Conflit(f"l'entrée {e.i} a déjà été reçue avec un autre contenu")
                 statut = verifier_entree(e, suivant, prev, registre, maintenant)
-                cx.execute(
+                insertions.append((
                     "INSERT INTO entrees (chaine,i,t,action,cible,rubriques,etab,acteur,motif,prev,hash,sig,statut,recu) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                     (chaine, e.i, e.t, e.action, e.cible, json.dumps(list(e.rubriques)), e.etab, e.acteur, e.motif, e.prev, e.hash, e.sig, statut, maintenant),
-                )
+                ))
                 suivant, prev = e.i + 1, e.hash
-                acceptees += 1
-            cx.execute("COMMIT")
-            return {"acceptees": acceptees, "deja_recues": deja, "prochain_rang": suivant}
+            cx.executer_lot(insertions)
+            cx.executer("COMMIT")
+            return {"acceptees": len(insertions), "deja_recues": deja, "prochain_rang": suivant}
         except BaseException:
-            cx.execute("ROLLBACK")
+            try:
+                cx.executer("ROLLBACK")
+            except Exception:
+                pass                     # base injoignable : la transaction expire d'elle-même, rien n'est écrit
             raise
         finally:
-            cx.close()
+            cx.fermer()
 
     def entrees_patient(self, cible: str) -> list[dict]:
-        with self._cx() as cx:
-            lignes = cx.execute("SELECT * FROM entrees WHERE cible=? ORDER BY t DESC, chaine, i DESC", (cible,)).fetchall()
+        cx = self._cx()
+        try:
+            lignes = cx.executer("SELECT * FROM entrees WHERE cible=? ORDER BY t DESC, chaine, i DESC", (cible,))
+        finally:
+            cx.fermer()
         out = []
         for r in lignes:
             e = _ligne_vers_entree(r)
@@ -129,16 +147,26 @@ class Store:
     def enregistrer_patient(self, pid: str, jeton: str) -> bool:
         """Premier enregistrement = propriétaire. Renvoie True si créé, False si déjà enregistré avec CE jeton."""
         h = empreinte(jeton)
-        with self._cx() as cx:
-            r = cx.execute("SELECT jeton_sha256 FROM patients WHERE id=?", (pid,)).fetchone()
-            if r:
-                if hmac.compare_digest(r["jeton_sha256"], h):
-                    return False
-                raise Conflit("cet identifiant est déjà enregistré par un autre appareil")
-            cx.execute("INSERT INTO patients (id, jeton_sha256, cree) VALUES (?,?,?)", (pid, h, int(time.time())))
-            return True
+        cx = self._cx()
+        try:
+            r = cx.executer("SELECT jeton_sha256 FROM patients WHERE id=?", (pid,))
+            if not r:
+                try:
+                    cx.executer("INSERT INTO patients (id, jeton_sha256, cree) VALUES (?,?,?)", (pid, h, int(time.time())))
+                    return True
+                except ErreurBase:
+                    # Deux enregistrements simultanés : l'autre a gagné ; on compare avec ce qu'il a écrit.
+                    r = cx.executer("SELECT jeton_sha256 FROM patients WHERE id=?", (pid,))
+        finally:
+            cx.fermer()
+        if r and hmac.compare_digest(r[0]["jeton_sha256"], h):
+            return False
+        raise Conflit("cet identifiant est déjà enregistré par un autre appareil")
 
     def jeton_valide(self, pid: str, jeton: str) -> bool:
-        with self._cx() as cx:
-            r = cx.execute("SELECT jeton_sha256 FROM patients WHERE id=?", (pid,)).fetchone()
-        return bool(r) and hmac.compare_digest(r["jeton_sha256"], empreinte(jeton))
+        cx = self._cx()
+        try:
+            r = cx.executer("SELECT jeton_sha256 FROM patients WHERE id=?", (pid,))
+        finally:
+            cx.fermer()
+        return bool(r) and hmac.compare_digest(r[0]["jeton_sha256"], empreinte(jeton))
