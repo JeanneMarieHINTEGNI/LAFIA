@@ -41,7 +41,7 @@ def envoyer(client, entrees, chaine=CHAINE):
 
 
 def test_sante(client):
-    assert client.get("/api/sante").json() == {"ok": True, "badges_connus": 3, "registre_version": 1}
+    assert client.get("/api/sante").json() == {"ok": True, "badges_connus": 3, "registre_version": 1, "autorite_demo": True}
 
 
 def test_parcours_complet(client):

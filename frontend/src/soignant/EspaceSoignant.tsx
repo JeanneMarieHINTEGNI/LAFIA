@@ -5,7 +5,7 @@ import { BadgeLoader } from '../ui/BadgeLoader'
 import { ScannerQr } from '../ui/ScannerQr'
 import { UrgenceView } from '../ui/UrgenceView'
 import { estCarte } from '../ui/lecteurQr'
-import { FACILITIES, REGISTRY } from '../ui/trust'
+import { AUTORITE_DEMO, FACILITIES, REGISTRY } from '../ui/trust'
 import { Qr, champ, quand } from '../ui/formulaire'
 import { journal, useJournal } from '../journal/usejournal'
 import { baseParDefaut, texteQr, type ProfilSaisi } from '../patient/carte'
@@ -57,6 +57,12 @@ export default function EspaceSoignant() {
           <h1 className="mt-4 font-display text-4xl font-light">Espace soignant</h1>
           <p className="mt-2 text-sm text-[#F4F1EA]/55">Mettez à jour la carte d’un patient depuis votre propre téléphone. Votre badge reste sur votre appareil, en mémoire seulement.</p>
         </div>
+
+        {AUTORITE_DEMO && (
+          <p role="note" className="rounded-xl border border-[#F2A93B]/40 bg-[#F2A93B]/10 px-4 py-3 text-sm text-[#F2A93B]">
+            Version de démonstration : les badges et la clé de l’autorité sont publics. Ne signez pas la carte d’un vrai patient avec ce site.
+          </p>
+        )}
 
         <section className="lg lg-panel p-5">
           {badge ? (

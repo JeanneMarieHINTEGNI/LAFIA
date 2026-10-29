@@ -179,3 +179,44 @@ Ce qui change par rapport au serveur à nous, et limites assumées pour un pilot
 
 `demarrer.sh` (port `PORT`, abandon de root après avoir donné le volume à l'utilisateur 1000) sert si l'on passe
 plus tard sur un hébergeur à conteneur (Railway, Fly.io, un VPS).
+
+## Passer de la démo au pilote : vraie clé d'autorité et vrais badges
+
+Aujourd'hui, l'autorité et les trois badges sont **de démonstration** : leurs clés secrètes sont dérivées de mots connus
+(`lafia-demo:…`) et publiées dans le dépôt. N'importe qui peut donc signer une carte « valide ». Le site le signale
+(bandeau dans l'espace soignant) et `/api/sante` répond `"autorite_demo": true`. **Avant le premier vrai patient :**
+
+À faire sur UN ordinateur de confiance (celui de la personne qui joue le rôle d'autorité pour le pilote), depuis `backend/` :
+
+```bash
+# 1. La clé d'autorité : aléatoire, écrite HORS du projet, lisible par vous seul. Sa clé publique va dans le site et le serveur.
+.venv/bin/python -m lafia.registre cle-autorite --sortie ~/lafia-autorite/autorite.json \
+    --label "Ministère de la Santé (pilote Bassila)" \
+    --copier-pub autorite.pub.json ../frontend/src/data/autorite.json
+
+# 2. Un badge par soignant (rôle : medecin, infirmier ou relais ; etab : code de l'établissement, voir frontend/src/data/facilities.json)
+.venv/bin/python -m lafia.registre badge --role infirmier --label "Inf. Adjovi" --etab 3fa9c1 \
+    --sortie ~/lafia-autorite/badges/adjovi.json --registre-source ~/lafia-autorite/registry.json
+
+# 3. Signer le registre, puis le copier côté site (registre de secours d'un téléphone jamais connecté)
+.venv/bin/python -m lafia.registre signer --source ~/lafia-autorite/registry.json \
+    --cle ~/lafia-autorite/autorite.json --sortie registre_signe.json --version 1
+cp registre_signe.json ../frontend/src/data/registre_signe.json
+.venv/bin/python -m lafia.registre verifier --registre registre_signe.json --autorite autorite.pub.json
+```
+
+4. Ajouter l'établissement dans `frontend/src/data/facilities.json` (`{"3fa9c1": "CS de Bassila"}`), faire commit et push
+   (seuls les fichiers **publics** changent : `autorite.pub.json`, `registre_signe.json`, `autorite.json` du site,
+   `facilities.json`). Vercel redéploie le site et l'API ; `/api/sante` doit répondre `"autorite_demo": false`.
+5. Remettre à chaque soignant **son** fichier de badge, en main propre (clé USB, câble), jamais par e-mail ni WhatsApp.
+
+Règles :
+- `~/lafia-autorite/` contient les seuls secrets du système. Faites-en **deux copies sur des clés USB rangées à part**.
+  Clé d'autorité perdue = plus aucun badge ne peut être ajouté ni révoqué (il faudrait tout recommencer).
+- L'outil refuse d'écrire un secret dans un dépôt Git ou par-dessus un fichier existant.
+- Changer d'autorité rend **invalides toutes les cartes signées avec les badges de démo** : c'est voulu. Les cartes de
+  test devront être re-signées par un vrai badge.
+- Révoquer un badge perdu : `python -m lafia.registre revoquer <kid> --registre registre_signe.json --cle ~/lafia-autorite/autorite.json`,
+  recopier dans `frontend/src/data/`, commit et push.
+- Les fichiers de démonstration (`secrets_demo/`, `frontend/demo/secrets/`) peuvent rester dans le dépôt pour les tests :
+  une fois l'autorité changée, ils ne permettent plus de signer une carte acceptée.

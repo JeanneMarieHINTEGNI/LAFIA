@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useBadge } from './BadgeContext'
-import { FACILITIES } from './trust'
+import { AUTORITE_DEMO, FACILITIES } from './trust'
 
 /**
  * Charge un badge soignant depuis son fichier JSON ({ kid, seed }). La clé reste en mémoire de session :
@@ -42,7 +42,10 @@ export function BadgeLoader() {
         Charger un badge soignant (.json)
         <input ref={input} type="file" accept="application/json,.json" className="sr-only" onChange={e => void lire(e.target.files?.[0])} />
       </label>
-      <p className="mt-2 text-xs text-[#F4F1EA]/40">Démonstration : fichiers de <code>demo/secrets/</code>. Seul un badge inscrit au registre peut signer.</p>
+      <p className="mt-2 text-xs text-[#F4F1EA]/40">
+        {AUTORITE_DEMO ? <>Démonstration : fichiers de <code>demo/secrets/</code>. </> : <>Le fichier de badge remis par votre autorité. </>}
+        Seul un badge inscrit au registre peut signer.
+      </p>
       {erreur && <p role="alert" className="mt-2 text-sm text-[#FF8D82]">{erreur}</p>}
     </div>
   )

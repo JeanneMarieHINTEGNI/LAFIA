@@ -14,12 +14,20 @@ Ligne de commande (depuis le dossier backend) :
     python -m lafia.registre revoquer <kid> --registre registre_signe.json --cle secrets_demo/autorite.json
     python -m lafia.registre verifier --registre registre_signe.json --autorite autorite.pub.json
     python -m lafia.registre cle-demo --sortie secrets_demo/autorite.json      (clé de DÉMO, interdite en production)
+
+Pilote réel (voir README, « Passer de la démo au pilote ») :
+      python -m lafia.registre cle-autorite --sortie ~/lafia-autorite/autorite.json --label "…" \
+        --copier-pub autorite.pub.json ../frontend/src/data/autorite.json
+    python -m lafia.registre badge --role infirmier --label "…" --etab 3fa9c1 \
+        --sortie ~/lafia-autorite/badges/infirmier-x.json --registre-source ~/lafia-autorite/registry.json
+Les fichiers SECRETS (clé d'autorité, badges) sont écrits hors de tout dépôt Git, lisibles par leur seul propriétaire.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import os
 import re
 import sys
 import time
@@ -31,6 +39,7 @@ from nacl.signing import SigningKey, VerifyKey
 
 RX_KID = re.compile(r"^[0-9a-f]{16}$")
 RX_PUB = re.compile(r"^[0-9a-f]{64}$")
+RX_ETAB = re.compile(r"^[0-9a-f]{4,8}$")
 ROLES = ("infirmier", "medecin", "relais")
 
 
@@ -88,6 +97,35 @@ def cle_demo() -> SigningKey:
     return SigningKey(hashlib.sha256(b"lafia-demo:autorite").digest())
 
 
+def est_demo(pub_hex: str) -> bool:
+    """La clé publique est-elle celle de l'autorité de DÉMONSTRATION (connue de tous) ?"""
+    return pub_hex == cle_demo().verify_key.encode().hex()
+
+
+def dans_un_depot(chemin: str | Path) -> Path | None:
+    """Renvoie le dossier du dépôt Git qui contiendrait ce fichier (un secret n'a rien à y faire), sinon None."""
+    p = Path(chemin).expanduser().resolve()
+    for d in [p.parent, *p.parent.parents]:
+        if (d / ".git").exists():
+            return d
+    return None
+
+
+def ecrire_secret(chemin: str | Path, obj: dict, forcer: bool = False) -> Path:
+    """Écrit un fichier secret : jamais dans un dépôt Git, jamais par-dessus un fichier existant, lisible par son seul propriétaire."""
+    p = Path(chemin).expanduser()
+    depot = dans_un_depot(p)
+    if depot and not forcer:
+        raise RegistreInvalide(f"{p} est dans le dépôt Git {depot} : un secret ne doit jamais y être. Choisissez un dossier hors du projet.")
+    if p.exists():
+        raise RegistreInvalide(f"{p} existe déjà : je ne l'écrase pas (une clé perdue ne se recrée pas).")
+    p.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(json.dumps(obj, ensure_ascii=False, indent=2) + "\n")
+    return p
+
+
 def lire_cle(chemin: str | Path) -> SigningKey:
     d = json.loads(Path(chemin).read_text(encoding="utf-8"))
     return SigningKey(bytes.fromhex(d["seed"]))
@@ -116,6 +154,17 @@ def main(argv: list[str] | None = None) -> int:
     v.add_argument("--registre", required=True); v.add_argument("--autorite", required=True)
     c = sp.add_parser("cle-demo", help="écrit la clé d'autorité de DÉMO et sa clé publique")
     c.add_argument("--sortie", required=True)
+    ca = sp.add_parser("cle-autorite", help="crée une VRAIE clé d'autorité (aléatoire), hors du dépôt")
+    ca.add_argument("--sortie", required=True, help="fichier secret, hors de tout dépôt Git")
+    ca.add_argument("--label", required=True, help="nom affiché de l'autorité, ex. « Ministère de la Santé (pilote Bassila) »")
+    ca.add_argument("--copier-pub", nargs="*", default=[], help="fichiers où écrire la clé PUBLIQUE (backend/autorite.pub.json, frontend/src/data/autorite.json)")
+    ca.add_argument("--forcer", action="store_true", help=argparse.SUPPRESS)
+    bg = sp.add_parser("badge", help="crée un VRAI badge soignant (aléatoire) et l'ajoute à la source du registre")
+    bg.add_argument("--role", required=True, choices=ROLES); bg.add_argument("--label", required=True)
+    bg.add_argument("--etab", required=True, help="code de l'établissement (4 à 8 caractères 0-9 a-f)")
+    bg.add_argument("--sortie", required=True, help="fichier secret du badge, à remettre au seul soignant")
+    bg.add_argument("--registre-source", required=True, help="registry.json (non signé) à compléter")
+    bg.add_argument("--forcer", action="store_true", help=argparse.SUPPRESS)
     a = p.parse_args(argv)
 
     try:
@@ -126,6 +175,30 @@ def main(argv: list[str] | None = None) -> int:
             pub = {"pub": k.verify_key.encode().hex(), "label": "Autorité de démonstration (Ministère, démo)"}
             _ecrire(Path(a.sortie).with_name("autorite.pub.json"), pub)
             print(f"Clé écrite dans {a.sortie} ; clé publique : {pub['pub']}")
+        elif a.cmd == "cle-autorite":
+            k = SigningKey.generate()
+            pub = k.verify_key.encode().hex()
+            secret = ecrire_secret(a.sortie, {"_avertissement": "CLÉ D'AUTORITÉ LAFIA — SECRÈTE. Ne jamais la copier dans un dépôt, un e-mail ou une messagerie.",
+                                              "label": a.label, "pub": pub, "seed": bytes(k).hex()}, a.forcer)
+            for cible in a.copier_pub:
+                _ecrire(cible, {"pub": pub, "label": a.label})
+            print(f"Clé d'autorité créée : {secret} (lisible par vous seul). Sauvegardez-la sur une clé USB rangée à part.")
+            print(f"Clé publique : {pub}" + (f" → écrite dans {', '.join(a.copier_pub)}" if a.copier_pub else ""))
+        elif a.cmd == "badge":
+            if not RX_ETAB.fullmatch(a.etab):
+                raise RegistreInvalide("code d'établissement : 4 à 8 caractères parmi 0-9 et a-f")
+            k = SigningKey.generate()
+            pub = k.verify_key.encode().hex()
+            kid = kid_de(pub)
+            source = Path(a.registre_source).expanduser()
+            badges = json.loads(source.read_text(encoding="utf-8")) if source.exists() else {}
+            badges = {kid_: b for kid_, b in badges.items() if not kid_.startswith("_")}
+            badges[kid] = {"pub": pub, "role": a.role, "label": a.label, "etab": a.etab}
+            valider_badges(badges)
+            ecrire_secret(a.sortie, {"_avertissement": "BADGE SOIGNANT LAFIA — SECRET, à remettre à son seul titulaire.", "kid": kid, "role": a.role, "label": a.label, "seed": bytes(k).hex()}, a.forcer)
+            source.parent.mkdir(parents=True, exist_ok=True)
+            _ecrire(source, badges)
+            print(f"Badge {kid} ({a.role}, {a.label}) créé → {a.sortie}. Ajouté à {source} : re-signez le registre pour qu'il soit accepté.")
         elif a.cmd == "signer":
             doc = signer(json.loads(Path(a.source).read_text(encoding="utf-8")), a.version, lire_cle(a.cle))
             _ecrire(a.sortie, doc)
@@ -141,6 +214,8 @@ def main(argv: list[str] | None = None) -> int:
         elif a.cmd == "verifier":
             c = ouvrir(json.loads(Path(a.registre).read_text(encoding="utf-8")), lire_pub(a.autorite))
             print(f"Registre valide, version {c['version']}, émis le {time.strftime('%d/%m/%Y %H:%M', time.localtime(c['emis']))}")
+            if est_demo(lire_pub(a.autorite)):
+                print("  ATTENTION : autorité de DÉMONSTRATION (clé connue de tous) : ne pas utiliser pour de vrais patients.")
             for kid, b in sorted(c["badges"].items()):
                 print(f"  {kid}  {b['role']:<10} {b.get('label', ''):<24} {'RÉVOQUÉ' if b.get('revoked') else 'actif'}")
     except (RegistreInvalide, OSError, KeyError, json.JSONDecodeError) as e:

@@ -33,7 +33,7 @@ from pydantic import BaseModel, Field
 from .base import BaseIndisponible
 from .debit import Limiteur, groupe_de, regles_depuis_env, secondes_entieres
 from .journal import RX_PATIENT, EntreeInvalide
-from .registre import RegistreInvalide, lire_pub, ouvrir
+from .registre import RegistreInvalide, est_demo, lire_pub, ouvrir
 from .store import Conflit, Store
 
 log = logging.getLogger("lafia")
@@ -171,7 +171,8 @@ def creer_app(db: str | None = None, registre: str | None = None, autorite: str 
 
     @app.get("/api/sante")
     def sante():
-        return {"ok": True, "badges_connus": len(reg.badges), "registre_version": reg.contenu["version"]}  # type: ignore[index]
+        # autorite_demo : la clé d'autorité est celle de démonstration (publique) ; à corriger avant de vrais patients.
+        return {"ok": True, "badges_connus": len(reg.badges), "registre_version": reg.contenu["version"], "autorite_demo": est_demo(reg.pub)}  # type: ignore[index]
 
     @app.get("/api/registre")
     def registre():
