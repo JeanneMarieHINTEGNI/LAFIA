@@ -11,6 +11,7 @@ import Final from './sections/Final'
 import EspacePatient from './patient/EspacePatient'
 import { ScanJournalise } from './ui/ScanJournalise'
 import EspaceSoignant from './soignant/EspaceSoignant'
+import TestTerrain from './terrain/TestTerrain'
 import { Wordmark } from './Logo'
 import { useDeviceState } from './patient/store'
 import { Avatar, CLE_PHOTO } from './patient/Avatar'
@@ -133,6 +134,7 @@ export default function App() {
   // Lecteur public : un soignant ou un passant lit une carte SANS créer d'espace patient (QR texte « L2: » compris).
   if (hash.startsWith('#/lire')) return <LecteurPage><ScanJournalise /></LecteurPage>
   if (hash.startsWith('#/soignant')) return <EspaceSoignant />
+  if (hash.startsWith('#/test-terrain')) return <TestTerrain />
   if (hash.startsWith('#/espace')) return <EspacePatient tab={hash.split('/')[2] ?? ''} />
   return <Landing />
 }
