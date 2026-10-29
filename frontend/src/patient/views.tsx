@@ -6,6 +6,7 @@ import { useDeviceState } from './store'
 import { PROFIL_VIDE, type ProfilSaisi } from './carte'
 import { Ecouter } from '../ui/Ecouter'
 import { RappelsView } from './Rappels'
+import { CompartimentSensible } from './Sensible'
 import { ExporterIps } from '../ui/ExporterIps'
 import { texteCarte } from '../ui/voix'
 
@@ -69,7 +70,7 @@ function lignesDeLaCarte(pr: NonNullable<ReturnType<typeof useCarteVerifiee>>['p
 }
 
 const COMPARTIMENTS = [
-  { n: 1, nom: 'Le sensible', regime: 'Chiffré sur votre téléphone. S’ouvrira avec le badge d’un médecin inscrit à l’Ordre, et vous en serez prévenu.' },
+  { n: 1, nom: 'Le sensible', regime: 'Chiffré sur votre téléphone, ouvert seulement avec votre code. Plus tard : un médecin inscrit à l’Ordre pourra l’ouvrir en urgence, et vous en serez prévenu.' },
   { n: 2, nom: 'Le dossier', regime: 'Votre dossier complet (historique, comptes rendus, examens), conservé sur un serveur comme dans les hôpitaux. Jamais nécessaire pour lire l’urgence.' },
 ]
 
@@ -124,7 +125,7 @@ export function CompartimentsView() {
               <p className="mt-1 max-w-lg text-[15px] text-[#F4F1EA]/45">{c.regime}</p>
             </div>
           </div>
-          <Bientot>Ce compartiment n’est pas encore construit : rien n’y est stocké pour l’instant.</Bientot>
+          {c.n === 1 ? <div className="pt-4"><CompartimentSensible /></div> : <Bientot>Ce compartiment n’est pas encore construit : rien n’y est stocké pour l’instant.</Bientot>}
         </section>
       ))}
     </div>

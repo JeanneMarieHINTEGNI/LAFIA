@@ -30,7 +30,8 @@ describe('« Mes compartiments » : la vraie carte, rien d’inventé', () => {
     expect(screen.getByText(/visible en urgence parce que vous l’avez choisi/)).toBeTruthy()   // catégorie sensible
     expect(screen.getByText(/Signée par : .*Centre hospitalier de référence/)).toBeTruthy()
     expect(screen.getByText(/Dernières consultations \(1\)/)).toBeTruthy()
-    expect(screen.getAllByText('Bientôt')).toHaveLength(2)                                      // compartiments 1 et 2
+    expect(screen.getAllByText('Bientôt')).toHaveLength(1)                                      // compartiment 2 (le 1 est construit)
+    expect(screen.getByRole('button', { name: /Créer mon compartiment sensible/ })).toBeTruthy()
     expect(document.body.textContent).not.toMatch(FICTIF)
   })
 
