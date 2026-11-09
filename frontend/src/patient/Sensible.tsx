@@ -18,22 +18,36 @@ export function CompartimentSensible({ iterations = ITERATIONS }: { iterations?:
   const [contenu, setContenu] = useState<ContenuSensible | null>(null)
   const code = useRef('')
   const [essais, setEssais] = useDeviceState<Essais>(CLE_ESSAIS.replace('lafia:', ''), AUCUN_ESSAI)
-  const minuteur = useRef<ReturnType<typeof setTimeout>>()
 
   const verrouiller = useCallback(() => { code.current = ''; setContenu(null) }, [])
-  const relancerMinuteur = useCallback(() => {
-    clearTimeout(minuteur.current)
-    minuteur.current = setTimeout(verrouiller, VERROU_AUTO_MS)
-  }, [verrouiller])
 
   useEffect(() => {
     if (!contenu) return
-    relancerMinuteur()
-    const cache = () => { if (document.visibilityState === 'hidden') verrouiller() }
-    document.addEventListener('visibilitychange', cache)
-    addEventListener('pointerdown', relancerMinuteur)
-    return () => { clearTimeout(minuteur.current); document.removeEventListener('visibilitychange', cache); removeEventListener('pointerdown', relancerMinuteur) }
-  }, [contenu, relancerMinuteur, verrouiller])
+
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const redemarrer = () => {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(verrouiller, VERROU_AUTO_MS)
+    }
+
+    const surVisibilite = () => {
+      if (document.visibilityState === 'hidden') {
+        if (timer) clearTimeout(timer)
+        verrouiller()
+      }
+    }
+
+    redemarrer()
+    document.addEventListener('visibilitychange', surVisibilite)
+    addEventListener('pointerdown', redemarrer)
+    if (document.visibilityState === 'hidden') surVisibilite()
+
+    return () => {
+      if (timer) clearTimeout(timer)
+      document.removeEventListener('visibilitychange', surVisibilite)
+      removeEventListener('pointerdown', redemarrer)
+    }
+  }, [contenu, verrouiller])
 
   const enregistrer = async (c: ContenuSensible) => {
     const nouveau = await fermer(c, code.current, iterations)

@@ -17,18 +17,30 @@ export function ScanJournalise({ initialText, etab }: { initialText?: string; et
   const [motif, setMotif] = useState<string | null>(null)
   // Une même lecture (même carte, même lecteur) relancée dans les 3 s n'est inscrite qu'une fois : React rejoue les
   // effets en développement, et un double déclenchement ferait croire au patient que sa carte a été lue deux fois.
-  const derniere = useRef<{ cle: string; t: number } | null>(null)
+  const derniere = useRef<{ cle: string; t: number; enCours?: Promise<void> } | null>(null)
   // Référence stable : ScanUrgence relance la lecture quand cette fonction change.
   const beforeDisplay = useCallback(
     async (v: Ok) => {
       const cle = [v.payload.id, v.payload.iat, badge?.kid ?? '', motif ?? ''].join('|')
       const t = Date.now()
-      if (derniere.current && derniere.current.cle === cle && t - derniere.current.t < 3000) return
-      derniere.current = { cle, t }
-      await journal.ajouterEntree({
+      const precedente = derniere.current
+      if (precedente && precedente.cle === cle && (precedente.enCours || t - precedente.t < 3000)) {
+        await precedente.enCours
+        return
+      }
+      const entree = journal.ajouterEntree({
         action: 'LECTURE', cible: v.payload.id, rubriques: ['C0'], etab: etab ?? badge?.etab, signataire: badge,
         ...(badge ? {} : { motif: motif ?? undefined }),
-      })
+      }).then(() => {})
+      const courante: { cle: string; t: number; enCours?: Promise<void> } = { cle, t, enCours: entree }
+      derniere.current = courante
+      try {
+        await entree
+        courante.enCours = undefined
+      } catch (error) {
+        if (derniere.current === courante) derniere.current = null
+        throw error
+      }
     },
     [badge, etab, motif],
   )

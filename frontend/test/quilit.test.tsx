@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { StrictMode, useEffect } from 'react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { verifierChaine } from '../src/journal'
 import { journal } from '../src/journal/usejournal'
 import { BadgeProvider, useBadge } from '../src/ui/BadgeContext'
@@ -16,6 +16,7 @@ function AvecBadge() {
 }
 
 beforeEach(() => localStorage.clear())
+afterEach(() => vi.restoreAllMocks())
 
 describe('« Qui lit ? »', () => {
   it('sans badge : la carte n’est pas affichée avant le choix', () => {
@@ -54,5 +55,20 @@ describe('« Qui lit ? »', () => {
     await screen.findByText(/Signature valide/)
     await new Promise(r => setTimeout(r, 200))
     expect(await journal.listerEntrees('p-0123456789abcdef')).toHaveLength(1)
+  })
+
+  it('réessaie le journal après un échec temporaire du stockage', async () => {
+    vi.spyOn(localStorage, 'setItem').mockImplementationOnce(() => { throw new Error('stockage indisponible') })
+    const view = render(<BadgeProvider><ScanJournalise initialText={QR} /></BadgeProvider>)
+    fireEvent.click(screen.getByRole('button', { name: 'Patient inconscient' }))
+    await screen.findByText(/NON journalisée/)
+
+    fireEvent.click(screen.getByText(/Repli : coller le contenu/))
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: QR } })
+    fireEvent.click(screen.getByRole('button', { name: 'Lire' }))
+    await screen.findByText(/Signature valide/)
+
+    await waitFor(async () => expect(await journal.listerEntrees('p-0123456789abcdef')).toHaveLength(1))
+    expect(screen.queryByText(/NON journalisée/)).toBeNull()
   })
 })

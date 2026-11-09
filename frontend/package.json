@@ -7,9 +7,11 @@
     "dev": "vite",
     "dev:https": "VITE_DEV_HTTPS=true vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
+    "build:pilote": "LAFIA_REQUIRE_REAL_AUTHORITY=true bun run build",
     "preview": "vite preview",
     "partage": "vite build && node scripts/partage.mjs",
     "telephone": "vite build && VITE_DEV_HTTPS=true vite preview --host 0.0.0.0",
+    "demo:qr": "bun run scripts/creer-carte-fictive.ts",
     "test": "vitest run"
   },
   "dependencies": {

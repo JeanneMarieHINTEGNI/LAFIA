@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import nacl from 'tweetnacl'
 import registreEmbarque from '../data/registre_signe.json'
 import autorite from '../data/autorite.json'
+import autoriteDemo from '../data/autorite_demo.json'
 import facilitiesData from '../data/facilities.json'
 import type { Registry, Role } from '../core'
 import { ROLE_LABEL } from './labels'
@@ -23,7 +24,7 @@ type Contenu = { version: number; emis: number; badges: Registry }
 const PUB_AUTORITE = (autorite as { pub: string }).pub
 
 /** Clé publique de l'autorité de DÉMONSTRATION (graine connue de tous : SHA-256("lafia-demo:autorite")). */
-export const PUB_AUTORITE_DEMO = '12b0c7ae3204a1619d1b168bc0f47a68d9f9676f07137ac935b7608741cd77f3'
+export const PUB_AUTORITE_DEMO = autoriteDemo.pub
 /** Vrai tant que le site fait confiance à l'autorité de démonstration : badges et cartes ne valent que pour une démo. */
 export const AUTORITE_DEMO = PUB_AUTORITE === PUB_AUTORITE_DEMO
 const CLE_CACHE = 'lafia.registre'
